@@ -2,11 +2,11 @@ const Saree = require('../models/sareeModel');
 
 const createSaree = async (req, res) => {
     try {
-
+        const myImage = `https://sjb-backend-01lg.onrender.com/uploads/sarees/${req.file.filename}`
         const { category, name, price, color } = req.body;
 
         const saree = await Saree.create({
-            image: req.file.filename,
+            image: myImage,
             category,
             name,
             price,
@@ -47,6 +47,7 @@ const updateSaree = async (req, res) => {
     try {
 
         const { category, name, price, color } = req.body;
+        
 
         const updateData = {
             category,
@@ -56,7 +57,8 @@ const updateSaree = async (req, res) => {
         };
 
         if (req.file) {
-            updateData.image = req.file.filename;
+            const myImage = `https://sjb-backend-01lg.onrender.com/uploads/sarees/${req.file.filename}`
+            updateData.image = myImage;
         }
 
         const saree = await Saree.findByIdAndUpdate(
