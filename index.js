@@ -13,7 +13,10 @@ app.use(cors());
 app.use(express.json());
 
 // Make uploaded images accessible
-app.use('/uploads', express.static('uploads'));
+app.use(
+    '/uploads/sarees',
+    express.static('uploads/sarees')
+);
 
 
 // MongoDB
