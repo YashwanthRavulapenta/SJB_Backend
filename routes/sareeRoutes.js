@@ -5,12 +5,12 @@ const {
     createSaree,
     updateSaree,
     deleteSaree
-} = require('../controllers/sareeController.js');
+} = require('../controllers/sareeController');
 
 const sareeRouter = express.Router();
 
 
-// ---------------- MULTER ----------------
+// ================= MULTER =================
 
 const storage = multer.diskStorage({
 
@@ -29,10 +29,9 @@ const upload = multer({
 });
 
 
-// ---------------- ROUTES ----------------
+// ================= ROUTES =================
 
-
-// CREATE SAREE
+// CREATE
 sareeRouter.post(
     '/',
     upload.single('image'),
@@ -40,7 +39,7 @@ sareeRouter.post(
 );
 
 
-// UPDATE SAREE
+// UPDATE
 sareeRouter.put(
     '/:id',
     upload.single('image'),
@@ -48,7 +47,7 @@ sareeRouter.put(
 );
 
 
-// DELETE SAREE
+// DELETE
 sareeRouter.delete(
     '/:id',
     deleteSaree
