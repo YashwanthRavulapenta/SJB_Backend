@@ -12,14 +12,14 @@ app.use(cors());
 
 app.use(express.json());
 
-// Make uploaded images accessible
-app.use(
-    '/uploads/sarees',
-    express.static('uploads/sarees')
-);
+
+// IMAGE FILES
+app.use('/uploads/sarees', express.static('uploads/sarees'));
+
+app.use('/sarees', sareeRouter);
 
 
-// MongoDB
+// DATABASE
 mongoose.connect(process.env.MONGO_URL)
     .then(() => {
         console.log("database connected");
@@ -30,11 +30,7 @@ mongoose.connect(process.env.MONGO_URL)
     });
 
 
-// Saree routes
-app.use('/sarees', sareeRouter);
-
-
-// Server
+// SERVER
 app.listen(process.env.PORT, () => {
     console.log(`Server running on port ${process.env.PORT}`);
 });

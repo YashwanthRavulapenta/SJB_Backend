@@ -31,7 +31,7 @@ const upload = multer({
 
 // ================= ROUTES =================
 
-// CREATE
+// POST - Create Saree
 sareeRouter.post(
     '/',
     upload.single('image'),
@@ -39,7 +39,7 @@ sareeRouter.post(
 );
 
 
-// UPDATE
+// PUT - Update Saree
 sareeRouter.put(
     '/:id',
     upload.single('image'),
@@ -47,7 +47,7 @@ sareeRouter.put(
 );
 
 
-// DELETE
+// DELETE - Delete Saree
 sareeRouter.delete(
     '/:id',
     deleteSaree
