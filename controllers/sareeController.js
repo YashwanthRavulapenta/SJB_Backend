@@ -7,12 +7,9 @@ const createSaree = async (req, res) => {
 
     try {
 
-        console.log("BODY:", req.body);
-        console.log("FILE:", req.file);
-
         if (!req.file) {
             return res.status(400).json({
-                message: "Image is required"
+                error: "Image is required"
             });
         }
 
@@ -23,40 +20,32 @@ const createSaree = async (req, res) => {
             color
         } = req.body;
 
-
         const image =
             `https://sjb-backend-01lg.onrender.com/uploads/sarees/${req.file.filename}`;
 
-
         const saree = await Saree.create({
-
             image,
             category,
             name,
             price,
             color
-
         });
 
-
-        res.status(201).json({
-
-            message: "Saree created successfully",
-
-            saree
-
-        });
+        res.status(201).json(saree);
 
     } catch (error) {
 
         console.log("CREATE ERROR:", error);
 
         res.status(500).json({
-            message: error.message
+            error: error.message
         });
 
     }
 };
+
+
+// ================= GET ALL =================
 
 const getSarees = async (req, res) => {
 
@@ -64,17 +53,14 @@ const getSarees = async (req, res) => {
 
         const sarees = await Saree.find();
 
-        res.status(200).json({
-            message: "Sarees fetched successfully",
-            sarees
-        });
+        res.status(200).json(sarees);
 
     } catch (error) {
 
         console.log("GET SAREES ERROR:", error);
 
         res.status(500).json({
-            message: error.message
+            error: error.message
         });
 
     }
@@ -91,25 +77,23 @@ const getSareeById = async (req, res) => {
 
         if (!saree) {
             return res.status(404).json({
-                message: "Saree not found"
+                error: "Saree not found"
             });
         }
 
-        res.status(200).json({
-            message: "Saree fetched successfully",
-            saree
-        });
+        res.status(200).json(saree);
 
     } catch (error) {
 
         console.log("GET SAREE ERROR:", error);
 
         res.status(500).json({
-            message: error.message
+            error: error.message
         });
 
     }
 };
+
 
 // ================= UPDATE =================
 
@@ -124,7 +108,6 @@ const updateSaree = async (req, res) => {
             color
         } = req.body;
 
-
         const updateData = {
             category,
             name,
@@ -132,16 +115,13 @@ const updateSaree = async (req, res) => {
             color
         };
 
-
         if (req.file) {
 
             const image =
                 `https://sjb-backend-01lg.onrender.com/uploads/sarees/${req.file.filename}`;
 
             updateData.image = image;
-
         }
-
 
         const saree = await Saree.findByIdAndUpdate(
             req.params.id,
@@ -152,28 +132,20 @@ const updateSaree = async (req, res) => {
             }
         );
 
-
         if (!saree) {
             return res.status(404).json({
-                message: "Saree not found"
+                error: "Saree not found"
             });
         }
 
-
-        res.json({
-
-            message: "Saree updated successfully",
-
-            saree
-
-        });
+        res.status(200).json(saree);
 
     } catch (error) {
 
         console.log("UPDATE ERROR:", error);
 
         res.status(500).json({
-            message: error.message
+            error: error.message
         });
 
     }
@@ -190,24 +162,20 @@ const deleteSaree = async (req, res) => {
             req.params.id
         );
 
-
         if (!saree) {
             return res.status(404).json({
-                message: "Saree not found"
+                error: "Saree not found"
             });
         }
 
-
-        res.json({
-            message: "Saree deleted successfully"
-        });
+        res.status(200).json(saree);
 
     } catch (error) {
 
         console.log("DELETE ERROR:", error);
 
         res.status(500).json({
-            message: error.message
+            error: error.message
         });
 
     }
@@ -216,8 +184,8 @@ const deleteSaree = async (req, res) => {
 
 module.exports = {
     createSaree,
-    updateSaree,
-    deleteSaree,
     getSarees,
     getSareeById,
+    updateSaree,
+    deleteSaree
 };
