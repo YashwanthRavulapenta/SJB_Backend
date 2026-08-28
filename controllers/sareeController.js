@@ -58,6 +58,58 @@ const createSaree = async (req, res) => {
     }
 };
 
+const getSarees = async (req, res) => {
+
+    try {
+
+        const sarees = await Saree.find();
+
+        res.status(200).json({
+            message: "Sarees fetched successfully",
+            sarees
+        });
+
+    } catch (error) {
+
+        console.log("GET SAREES ERROR:", error);
+
+        res.status(500).json({
+            message: error.message
+        });
+
+    }
+};
+
+
+// ================= GET ONE =================
+
+const getSareeById = async (req, res) => {
+
+    try {
+
+        const saree = await Saree.findById(req.params.id);
+
+        if (!saree) {
+            return res.status(404).json({
+                message: "Saree not found"
+            });
+        }
+
+        res.status(200).json({
+            message: "Saree fetched successfully",
+            saree
+        });
+
+    } catch (error) {
+
+        console.log("GET SAREE ERROR:", error);
+
+        res.status(500).json({
+            message: error.message
+        });
+
+    }
+};
 
 // ================= UPDATE =================
 
@@ -165,5 +217,7 @@ const deleteSaree = async (req, res) => {
 module.exports = {
     createSaree,
     updateSaree,
-    deleteSaree
+    deleteSaree,
+    getSarees,
+    getSareeById,
 };
