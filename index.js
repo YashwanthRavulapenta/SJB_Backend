@@ -10,23 +10,31 @@ const sareeRouter = require('./routes/sareeRoutes');
 const app = express();
 
 app.use(cors());
+
 app.use(express.json());
 
 
-// Serve saree images
+// ================= IMAGES =================
+
+const uploadPath = path.join(
+    process.cwd(),
+    'uploads',
+    'sarees'
+);
+
 app.use(
     '/uploads/sarees',
-    express.static(
-        path.join(__dirname, 'uploads', 'sarees')
-    )
+    express.static(uploadPath)
 );
 
 
-// Saree API
+// ================= SAREE API =================
+
 app.use('/sarees', sareeRouter);
 
 
-// MongoDB
+// ================= DATABASE =================
+
 mongoose.connect(process.env.MONGO_URL)
     .then(() => {
         console.log("database connected");
@@ -36,7 +44,8 @@ mongoose.connect(process.env.MONGO_URL)
     });
 
 
-// Server
+// ================= SERVER =================
+
 app.listen(process.env.PORT, () => {
     console.log(`Server running on ${process.env.PORT}`);
 });

@@ -16,7 +16,11 @@ const sareeRouter = express.Router();
 
 // ================= UPLOAD FOLDER =================
 
-const uploadPath = path.join(process.cwd(), 'uploads', 'sarees');
+const uploadPath = path.join(
+    process.cwd(),
+    'uploads',
+    'sarees'
+);
 
 if (!fs.existsSync(uploadPath)) {
     fs.mkdirSync(uploadPath, {
@@ -30,7 +34,7 @@ if (!fs.existsSync(uploadPath)) {
 const storage = multer.diskStorage({
 
     destination: (req, file, cb) => {
-        cb(null, 'uploads/sarees/');
+        cb(null, uploadPath);
     },
 
     filename: (req, file, cb) => {
@@ -40,7 +44,7 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({
-    storage: storage
+    storage
 });
 
 
