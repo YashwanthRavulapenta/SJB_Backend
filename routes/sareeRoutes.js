@@ -30,7 +30,7 @@ if (!fs.existsSync(uploadPath)) {
 const storage = multer.diskStorage({
 
     destination: (req, file, cb) => {
-        cb(null, uploadPath);
+        cb(null, 'uploads/sarees/');
     },
 
     filename: (req, file, cb) => {
