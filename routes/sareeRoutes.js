@@ -1,5 +1,6 @@
 const express = require('express');
 const multer = require('multer');
+const fs = require('fs');
 
 const {
     createSaree,
@@ -8,6 +9,14 @@ const {
 } = require('../controllers/sareeController');
 
 const sareeRouter = express.Router();
+
+
+// Create uploads/sarees folder if it doesn't exist
+if (!fs.existsSync('uploads/sarees')) {
+    fs.mkdirSync('uploads/sarees', {
+        recursive: true
+    });
+}
 
 
 // ================= MULTER =================
@@ -31,7 +40,7 @@ const upload = multer({
 
 // ================= ROUTES =================
 
-// POST - Create Saree
+// POST
 sareeRouter.post(
     '/',
     upload.single('image'),
@@ -39,7 +48,7 @@ sareeRouter.post(
 );
 
 
-// PUT - Update Saree
+// UPDATE
 sareeRouter.put(
     '/:id',
     upload.single('image'),
@@ -47,7 +56,7 @@ sareeRouter.put(
 );
 
 
-// DELETE - Delete Saree
+// DELETE
 sareeRouter.delete(
     '/:id',
     deleteSaree

@@ -10,7 +10,6 @@ const createSaree = async (req, res) => {
         console.log("BODY:", req.body);
         console.log("FILE:", req.file);
 
-        // Check image
         if (!req.file) {
             return res.status(400).json({
                 message: "Image is required"
@@ -50,7 +49,7 @@ const createSaree = async (req, res) => {
 
     } catch (error) {
 
-        console.error(error);
+        console.log("CREATE ERROR:", error);
 
         res.status(500).json({
             message: error.message
@@ -58,7 +57,6 @@ const createSaree = async (req, res) => {
 
     }
 };
-
 
 
 // ================= UPDATE =================
@@ -76,16 +74,13 @@ const updateSaree = async (req, res) => {
 
 
         const updateData = {
-
             category,
             name,
             price,
             color
-
         };
 
 
-        // If new image is uploaded
         if (req.file) {
 
             const image =
@@ -97,25 +92,19 @@ const updateSaree = async (req, res) => {
 
 
         const saree = await Saree.findByIdAndUpdate(
-
             req.params.id,
-
             updateData,
-
             {
                 new: true,
                 runValidators: true
             }
-
         );
 
 
         if (!saree) {
-
             return res.status(404).json({
                 message: "Saree not found"
             });
-
         }
 
 
@@ -129,7 +118,7 @@ const updateSaree = async (req, res) => {
 
     } catch (error) {
 
-        console.error(error);
+        console.log("UPDATE ERROR:", error);
 
         res.status(500).json({
             message: error.message
@@ -137,7 +126,6 @@ const updateSaree = async (req, res) => {
 
     }
 };
-
 
 
 // ================= DELETE =================
@@ -152,23 +140,19 @@ const deleteSaree = async (req, res) => {
 
 
         if (!saree) {
-
             return res.status(404).json({
                 message: "Saree not found"
             });
-
         }
 
 
         res.json({
-
             message: "Saree deleted successfully"
-
         });
 
     } catch (error) {
 
-        console.error(error);
+        console.log("DELETE ERROR:", error);
 
         res.status(500).json({
             message: error.message
@@ -178,11 +162,8 @@ const deleteSaree = async (req, res) => {
 };
 
 
-
 module.exports = {
-
     createSaree,
     updateSaree,
     deleteSaree
-
 };
