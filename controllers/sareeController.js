@@ -25,7 +25,7 @@ const createSaree = async (req, res) => {
 
 
         const image =
-            `${process.env.BASE_URL}/uploads/sarees/${req.file.filename}`;
+            `https://sjb-backend-01lg.onrender.com/uploads/sarees/${req.file.filename}`;
 
 
         const saree = await Saree.create({
@@ -84,7 +84,7 @@ const updateSaree = async (req, res) => {
         if (req.file) {
 
             const image =
-                `${process.env.BASE_URL}/uploads/sarees/${req.file.filename}`;
+                `https://sjb-backend-01lg.onrender.com/uploads/sarees/${req.file.filename}`;
 
             updateData.image = image;
 
