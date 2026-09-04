@@ -1,6 +1,5 @@
 const express = require('express');
 const multer = require('multer');
-const fs = require('fs');
 const path = require('path');
 
 const {
@@ -11,51 +10,76 @@ const {
     deleteSaree
 } = require('../controllers/sareeController');
 
+
 const sareeRouter = express.Router();
-
-
-// ================= UPLOAD FOLDER =================
-
-const uploadPath = path.join(
-    process.cwd(),
-    'uploads',
-    'sarees'
-);
-
-if (!fs.existsSync(uploadPath)) {
-    fs.mkdirSync(uploadPath, {
-        recursive: true
-    });
-}
 
 
 // ================= MULTER =================
 
 const storage = multer.diskStorage({
 
+    // Where image will be stored
+
     destination: (req, file, cb) => {
-        cb(null, uploadPath);
+
+        cb(
+            null,
+
+            path.join(
+                __dirname,
+                '..',
+                'sareesFolder'
+            )
+
+        );
+
     },
 
+
+    // Image file name
+
     filename: (req, file, cb) => {
-        cb(null, Date.now() + '-' + file.originalname);
+
+        const uniqueName =
+            Date.now() +
+            '-' +
+            file.originalname;
+
+        cb(null, uniqueName);
+
     }
 
 });
+
 
 const upload = multer({
     storage
 });
 
 
-// ================= GET =================
+// ================= GET ALL =================
 
-sareeRouter.get('/', getSarees);
+// GET /sarees
 
-sareeRouter.get('/:id', getSareeById);
+sareeRouter.get(
+    '/',
+    getSarees
+);
 
 
-// ================= POST =================
+// ================= GET ONE =================
+
+// GET /sarees/:id
+
+sareeRouter.get(
+    '/:id',
+    getSareeById
+);
+
+
+// ================= CREATE =================
+
+// POST /sarees
 
 sareeRouter.post(
     '/',
@@ -64,7 +88,9 @@ sareeRouter.post(
 );
 
 
-// ================= PUT =================
+// ================= UPDATE =================
+
+// PUT /sarees/:id
 
 sareeRouter.put(
     '/:id',
@@ -74,6 +100,8 @@ sareeRouter.put(
 
 
 // ================= DELETE =================
+
+// DELETE /sarees/:id
 
 sareeRouter.delete(
     '/:id',
