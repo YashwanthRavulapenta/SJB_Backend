@@ -1,6 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 
 const {
     createSaree,
@@ -14,29 +15,36 @@ const {
 const sareeRouter = express.Router();
 
 
+// ================= UPLOAD FOLDER =================
+
+const uploadPath = path.join(
+    __dirname,
+    '..',
+    'sareesFolder'
+);
+
+
+// Create sareesFolder automatically
+
+if (!fs.existsSync(uploadPath)) {
+
+    fs.mkdirSync(uploadPath, {
+        recursive: true
+    });
+
+}
+
+
 // ================= MULTER =================
 
 const storage = multer.diskStorage({
 
-    // Where image will be stored
-
     destination: (req, file, cb) => {
 
-        cb(
-            null,
-
-            path.join(
-                __dirname,
-                '..',
-                'sareesFolder'
-            )
-
-        );
+        cb(null, uploadPath);
 
     },
 
-
-    // Image file name
 
     filename: (req, file, cb) => {
 
@@ -59,8 +67,6 @@ const upload = multer({
 
 // ================= GET ALL =================
 
-// GET /sarees
-
 sareeRouter.get(
     '/',
     getSarees
@@ -69,8 +75,6 @@ sareeRouter.get(
 
 // ================= GET ONE =================
 
-// GET /sarees/:id
-
 sareeRouter.get(
     '/:id',
     getSareeById
@@ -78,8 +82,6 @@ sareeRouter.get(
 
 
 // ================= CREATE =================
-
-// POST /sarees
 
 sareeRouter.post(
     '/',
@@ -90,8 +92,6 @@ sareeRouter.post(
 
 // ================= UPDATE =================
 
-// PUT /sarees/:id
-
 sareeRouter.put(
     '/:id',
     upload.single('image'),
@@ -101,12 +101,12 @@ sareeRouter.put(
 
 // ================= DELETE =================
 
-// DELETE /sarees/:id
-
 sareeRouter.delete(
     '/:id',
     deleteSaree
 );
 
+
+// ================= EXPORT =================
 
 module.exports = sareeRouter;

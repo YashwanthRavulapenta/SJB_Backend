@@ -19,8 +19,6 @@ app.use(express.json());
 
 // ================= STATIC IMAGE FOLDER =================
 
-// Makes images inside sareesFolder accessible
-
 app.use(
     '/sareesFolder',
     express.static(
@@ -34,7 +32,7 @@ app.use(
 app.use('/sarees', sareeRouter);
 
 
-// ================= TEST ROUTE =================
+// ================= TEST =================
 
 app.get('/', (req, res) => {
 
@@ -45,16 +43,23 @@ app.get('/', (req, res) => {
 });
 
 
-// ================= DATABASE CONNECTION =================
+// ================= DATABASE =================
 
 mongoose.connect(process.env.MONGO_URL)
 
     .then(() => {
+
         console.log("MongoDB connected");
+
     })
 
     .catch((error) => {
-        console.log("Database error:", error.message);
+
+        console.log(
+            "Database error:",
+            error.message
+        );
+
     });
 
 
