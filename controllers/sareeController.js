@@ -1,273 +1,175 @@
 const Saree = require('../models/sareeModel');
 
+const cloudinary = require('../config/cloudinary');
 
-// ================= CREATE =================
-
-const createSaree = async (req, res) => {
-
-    try {
-
-        const {
-            category,
-            name,
-            price,
-            color
-        } = req.body;
+const uploadToCloudinary = require(
+  '../utils/cloudinaryUpload'
+);
 
 
-        // Check image
+// =====================================
+// ADD SAREE
+// =====================================
 
-        if (!req.file) {
+const addSaree = async (req, res) => {
 
-            return res.status(400).json({
-                message: "Image is required"
-            });
+  try {
 
-        }
+    const { name, price, description } = req.body;
 
-
-        // Image URL
-
-        const image =
-            `https://sjb-backend-01lg.onrender.com/sareesFolder/${req.file.filename}`;
-
-
-        // Create Saree
-
-        const saree = await Saree.create({
-
-            category,
-            name,
-            price,
-            color,
-            image
-
-        });
-
-
-        res.status(201).json({
-
-            message: "Saree created successfully",
-
-            saree
-
-        });
-
-    } catch (error) {
-
-        console.log("CREATE ERROR:", error);
-
-        res.status(500).json({
-
-            message: error.message
-
-        });
-
+    if (!req.file) {
+      return res.status(400).json({
+        message: 'Please upload an image'
+      });
     }
+
+    // Upload image to Cloudinary
+    const result = await uploadToCloudinary(
+      req.file.buffer,
+      'sarees'
+    );
+
+    // Save in MongoDB
+    const saree = await Saree.create({
+
+      name,
+      price,
+      description,
+
+      image: result.secure_url,
+
+      imagePublicId: result.public_id
+
+    });
+
+    res.status(201).json({
+
+      message: 'Saree added successfully',
+
+      saree
+
+    });
+
+  } catch (error) {
+
+    console.log('Add Saree Error:', error);
+
+    res.status(500).json({
+      message: 'Error adding saree',
+      error: error.message
+    });
+
+  }
 
 };
 
 
-// ================= GET ALL =================
+// =====================================
+// GET ALL SAREES
+// =====================================
 
 const getSarees = async (req, res) => {
 
-    try {
+  try {
 
-        const sarees = await Saree.find();
+    const sarees = await Saree.find()
+      .sort({ createdAt: -1 });
 
-        res.status(200).json(sarees);
+    res.status(200).json(sarees);
 
-    } catch (error) {
+  } catch (error) {
 
-        console.log("GET ERROR:", error);
+    res.status(500).json({
+      message: 'Error getting sarees'
+    });
 
-        res.status(500).json({
-
-            message: error.message
-
-        });
-
-    }
+  }
 
 };
 
 
-// ================= GET ONE =================
+// =====================================
+// GET SINGLE SAREE
+// =====================================
 
 const getSareeById = async (req, res) => {
 
-    try {
+  try {
 
-        const saree = await Saree.findById(
-            req.params.id
-        );
+    const saree = await Saree.findById(req.params.id);
 
+    if (!saree) {
 
-        if (!saree) {
-
-            return res.status(404).json({
-
-                message: "Saree not found"
-
-            });
-
-        }
-
-
-        res.status(200).json(saree);
-
-    } catch (error) {
-
-        console.log("GET ONE ERROR:", error);
-
-        res.status(500).json({
-
-            message: error.message
-
-        });
+      return res.status(404).json({
+        message: 'Saree not found'
+      });
 
     }
+
+    res.status(200).json(saree);
+
+  } catch (error) {
+
+    res.status(500).json({
+      message: 'Error getting saree'
+    });
+
+  }
 
 };
 
 
-// ================= UPDATE =================
-
-const updateSaree = async (req, res) => {
-
-    try {
-
-        const {
-            category,
-            name,
-            price,
-            color
-        } = req.body;
-
-
-        const updateData = {
-
-            category,
-            name,
-            price,
-            color
-
-        };
-
-
-        // If new image is uploaded
-
-        if (req.file) {
-
-            const image =
-                `https://sjb-backend-01lg.onrender.com/sareesFolder/${req.file.filename}`;
-
-
-            updateData.image = image;
-
-        }
-
-
-        const saree = await Saree.findByIdAndUpdate(
-
-            req.params.id,
-
-            updateData,
-
-            {
-                new: true,
-                runValidators: true
-            }
-
-        );
-
-
-        if (!saree) {
-
-            return res.status(404).json({
-
-                message: "Saree not found"
-
-            });
-
-        }
-
-
-        res.status(200).json({
-
-            message: "Saree updated successfully",
-
-            saree
-
-        });
-
-    } catch (error) {
-
-        console.log("UPDATE ERROR:", error);
-
-        res.status(500).json({
-
-            message: error.message
-
-        });
-
-    }
-
-};
-
-
-// ================= DELETE =================
+// =====================================
+// DELETE SAREE
+// =====================================
 
 const deleteSaree = async (req, res) => {
 
-    try {
+  try {
 
-        const saree = await Saree.findByIdAndDelete(
-            req.params.id
-        );
+    const saree = await Saree.findById(req.params.id);
 
+    if (!saree) {
 
-        if (!saree) {
-
-            return res.status(404).json({
-
-                message: "Saree not found"
-
-            });
-
-        }
-
-
-        res.status(200).json({
-
-            message: "Saree deleted successfully"
-
-        });
-
-    } catch (error) {
-
-        console.log("DELETE ERROR:", error);
-
-        res.status(500).json({
-
-            message: error.message
-
-        });
+      return res.status(404).json({
+        message: 'Saree not found'
+      });
 
     }
+
+    // Delete image from Cloudinary
+    await cloudinary.uploader.destroy(
+      saree.imagePublicId
+    );
+
+    // Delete from MongoDB
+    await Saree.findByIdAndDelete(req.params.id);
+
+    res.status(200).json({
+      message: 'Saree and image deleted successfully'
+    });
+
+  } catch (error) {
+
+    console.log('Delete Error:', error);
+
+    res.status(500).json({
+      message: 'Error deleting saree'
+    });
+
+  }
 
 };
 
 
-// ================= EXPORT =================
-
 module.exports = {
 
-    createSaree,
-    getSarees,
-    getSareeById,
-    updateSaree,
-    deleteSaree
+  addSaree,
+
+  getSarees,
+
+  getSareeById,
+
+  deleteSaree
 
 };

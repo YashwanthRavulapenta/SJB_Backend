@@ -1,139 +1,40 @@
 const express = require('express');
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
 
+const router = express.Router();
+
+const upload = require('../middleware/upload');
 
 const {
-
-    createJewellery,
-    getJewellery,
-    getJewelleryById,
-    updateJewellery,
-    deleteJewellery
-
+  addJewellery,
+  getJewellery,
+  getJewelleryById,
+  deleteJewellery
 } = require('../controllers/jewelleryController');
 
 
-const jewelleryRouter = express.Router();
-
-
-// ================= UPLOAD FOLDER =================
-
-const uploadPath = path.join(
-
-    __dirname,
-    '..',
-    'jewelleryFolder'
-
+router.post(
+  '/add',
+  upload.single('image'),
+  addJewellery
 );
 
 
-// Create jewelleryFolder automatically
-
-if (!fs.existsSync(uploadPath)) {
-
-    fs.mkdirSync(uploadPath, {
-
-        recursive: true
-
-    });
-
-}
-
-
-// ================= MULTER =================
-
-const storage = multer.diskStorage({
-
-    destination: (req, file, cb) => {
-
-        cb(null, uploadPath);
-
-    },
-
-
-    filename: (req, file, cb) => {
-
-        const uniqueName =
-
-            Date.now() +
-            '-' +
-            file.originalname;
-
-        cb(null, uniqueName);
-
-    }
-
-});
-
-
-const upload = multer({
-
-    storage
-
-});
-
-
-// ================= GET ALL =================
-
-jewelleryRouter.get(
-
-    '/',
-
-    getJewellery
-
+router.get(
+  '/',
+  getJewellery
 );
 
 
-// ================= GET ONE =================
-
-jewelleryRouter.get(
-
-    '/:id',
-
-    getJewelleryById
-
+router.get(
+  '/:id',
+  getJewelleryById
 );
 
 
-// ================= CREATE =================
-
-jewelleryRouter.post(
-
-    '/',
-
-    upload.single('image'),
-
-    createJewellery
-
+router.delete(
+  '/:id',
+  deleteJewellery
 );
 
 
-// ================= UPDATE =================
-
-jewelleryRouter.put(
-
-    '/:id',
-
-    upload.single('image'),
-
-    updateJewellery
-
-);
-
-
-// ================= DELETE =================
-
-jewelleryRouter.delete(
-
-    '/:id',
-
-    deleteJewellery
-
-);
-
-
-// ================= EXPORT =================
-
-module.exports = jewelleryRouter;
+module.exports = router;

@@ -1,35 +1,36 @@
 const mongoose = require('mongoose');
 
-
-const jewellerySchema = new mongoose.Schema({
-
-    image: {
-        type: String,
-        required: true
-    },
-
+const jewellerySchema = new mongoose.Schema(
+  {
     name: {
-        type: String,
-        required: true
-    },
-
-    category: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
+      trim: true
     },
 
     price: {
-        type: Number,
-        required: true
+      type: Number,
+      required: true
+    },
+
+    description: {
+      type: String,
+      trim: true
+    },
+
+    image: {
+      type: String,
+      required: true
+    },
+
+    imagePublicId: {
+      type: String,
+      required: true
     }
-
-});
-
-
-const Jewellery = mongoose.model(
-    'Jewellery',
-    jewellerySchema
+  },
+  {
+    timestamps: true
+  }
 );
 
-
-module.exports = Jewellery;
+module.exports = mongoose.model('Jewellery', jewellerySchema);

@@ -1,40 +1,36 @@
 const mongoose = require('mongoose');
 
-
-const sareeSchema = new mongoose.Schema({
-
-    image: {
-        type: String,
-        required: true
-    },
-
-    category: {
-        type: String,
-        required: true
-    },
-
+const sareeSchema = new mongoose.Schema(
+  {
     name: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
+      trim: true
     },
 
     price: {
-        type: Number,
-        required: true
+      type: Number,
+      required: true
     },
 
-    color: {
-        type: String,
-        required: true
+    description: {
+      type: String,
+      trim: true
+    },
+
+    image: {
+      type: String,
+      required: true
+    },
+
+    imagePublicId: {
+      type: String,
+      required: true
     }
-
-});
-
-
-const Saree = mongoose.model(
-    'Saree',
-    sareeSchema
+  },
+  {
+    timestamps: true
+  }
 );
 
-
-module.exports = Saree;
+module.exports = mongoose.model('Saree', sareeSchema);

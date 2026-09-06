@@ -1,102 +1,61 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const path = require('path');
-
 require('dotenv').config();
 
+const express = require('express');
+const cors = require('cors');
 
-const sareeRouter = require('./routes/sareeRoutes');
-const jewelleryRouter = require('./routes/jewelleryRoutes');
+const connectDB = require('./config/db');
+
+const sareeRoutes = require('./routes/sareeRoutes');
+const jewelleryRoutes = require('./routes/jewelleryRoutes');
 
 
 const app = express();
 
 
-// ================= MIDDLEWARE =================
+// ==========================================
+// DATABASE CONNECTION
+// ==========================================
+
+connectDB();
+
+
+// ==========================================
+// MIDDLEWARE
+// ==========================================
 
 app.use(cors());
 
 app.use(express.json());
 
 
-// ================= SAREE IMAGES =================
+// ==========================================
+// ROUTES
+// ==========================================
 
-app.use(
+app.use('/api/sarees', sareeRoutes);
 
-    '/sareesFolder',
-
-    express.static(
-        path.join(__dirname, 'sareesFolder')
-    )
-
-);
+app.use('/api/jewellery', jewelleryRoutes);
 
 
-// ================= JEWELLERY IMAGES =================
-
-app.use(
-
-    '/jewelleryFolder',
-
-    express.static(
-        path.join(__dirname, 'jewelleryFolder')
-    )
-
-);
-
-
-// ================= ROUTES =================
-
-app.use('/sarees', sareeRouter);
-
-app.use('/jewellery', jewelleryRouter);
-
-
-// ================= TEST =================
+// ==========================================
+// TEST ROUTE
+// ==========================================
 
 app.get('/', (req, res) => {
 
-    res.json({
-
-        message: "Server is running"
-
-    });
+  res.send('SJB Backend API is Running 🚀');
 
 });
 
 
-// ================= DATABASE =================
-
-mongoose.connect(process.env.MONGO_URL)
-
-    .then(() => {
-
-        console.log("MongoDB connected");
-
-    })
-
-    .catch((error) => {
-
-        console.log(
-
-            "Database error:",
-            error.message
-
-        );
-
-    });
-
-
-// ================= SERVER =================
+// ==========================================
+// SERVER
+// ==========================================
 
 const PORT = process.env.PORT || 5000;
 
-
 app.listen(PORT, () => {
 
-    console.log(
-        `Server running on port ${PORT}`
-    );
+  console.log(`Server running on port ${PORT}`);
 
 });

@@ -1,268 +1,181 @@
 const Jewellery = require('../models/jewelleryModel');
 
+const cloudinary = require('../config/cloudinary');
 
-// ================= CREATE =================
-
-const createJewellery = async (req, res) => {
-
-    try {
-
-        const {
-            name,
-            category,
-            price
-        } = req.body;
+const uploadToCloudinary = require(
+  '../utils/cloudinaryUpload'
+);
 
 
-        // Check image
+// =====================================
+// ADD JEWELLERY
+// =====================================
 
-        if (!req.file) {
+const addJewellery = async (req, res) => {
 
-            return res.status(400).json({
-                message: "Image is required"
-            });
+  try {
 
-        }
+    const { name, price, description } = req.body;
 
-
-        // Image URL
-
-        const image =
-            `https://sjb-backend-01lg.onrender.com/jewelleryFolder/${req.file.filename}`;
-
-
-        // Create Jewellery
-
-        const jewellery = await Jewellery.create({
-
-            name,
-            category,
-            price,
-            image
-
-        });
-
-
-        res.status(201).json({
-
-            message: "Jewellery created successfully",
-
-            jewellery
-
-        });
-
-    } catch (error) {
-
-        console.log("CREATE ERROR:", error);
-
-        res.status(500).json({
-
-            message: error.message
-
-        });
-
+    if (!req.file) {
+      return res.status(400).json({
+        message: 'Please upload an image'
+      });
     }
+
+    // Upload to Cloudinary
+    const result = await uploadToCloudinary(
+      req.file.buffer,
+      'jewellery'
+    );
+
+    // Save in MongoDB
+    const jewellery = await Jewellery.create({
+
+      name,
+      price,
+      description,
+
+      image: result.secure_url,
+
+      imagePublicId: result.public_id
+
+    });
+
+    res.status(201).json({
+
+      message: 'Jewellery added successfully',
+
+      jewellery
+
+    });
+
+  } catch (error) {
+
+    console.log('Add Jewellery Error:', error);
+
+    res.status(500).json({
+      message: 'Error adding jewellery',
+      error: error.message
+    });
+
+  }
 
 };
 
 
-// ================= GET ALL =================
+// =====================================
+// GET ALL JEWELLERY
+// =====================================
 
 const getJewellery = async (req, res) => {
 
-    try {
+  try {
 
-        const jewellery = await Jewellery.find();
+    const jewellery = await Jewellery.find()
+      .sort({ createdAt: -1 });
 
-        res.status(200).json(jewellery);
+    res.status(200).json(jewellery);
 
-    } catch (error) {
+  } catch (error) {
 
-        console.log("GET ERROR:", error);
+    res.status(500).json({
+      message: 'Error getting jewellery'
+    });
 
-        res.status(500).json({
-
-            message: error.message
-
-        });
-
-    }
+  }
 
 };
 
 
-// ================= GET ONE =================
+// =====================================
+// GET SINGLE JEWELLERY
+// =====================================
 
 const getJewelleryById = async (req, res) => {
 
-    try {
+  try {
 
-        const jewellery = await Jewellery.findById(
-            req.params.id
-        );
+    const jewellery = await Jewellery.findById(
+      req.params.id
+    );
 
+    if (!jewellery) {
 
-        if (!jewellery) {
-
-            return res.status(404).json({
-
-                message: "Jewellery not found"
-
-            });
-
-        }
-
-
-        res.status(200).json(jewellery);
-
-    } catch (error) {
-
-        console.log("GET ONE ERROR:", error);
-
-        res.status(500).json({
-
-            message: error.message
-
-        });
+      return res.status(404).json({
+        message: 'Jewellery not found'
+      });
 
     }
+
+    res.status(200).json(jewellery);
+
+  } catch (error) {
+
+    res.status(500).json({
+      message: 'Error getting jewellery'
+    });
+
+  }
 
 };
 
 
-// ================= UPDATE =================
-
-const updateJewellery = async (req, res) => {
-
-    try {
-
-        const {
-            name,
-            category,
-            price
-        } = req.body;
-
-
-        const updateData = {
-
-            name,
-            category,
-            price
-
-        };
-
-
-        // If new image is uploaded
-
-        if (req.file) {
-
-            const image =
-                `https://sjb-backend-01lg.onrender.com/jewelleryFolder/${req.file.filename}`;
-
-            updateData.image = image;
-
-        }
-
-
-        const jewellery = await Jewellery.findByIdAndUpdate(
-
-            req.params.id,
-
-            updateData,
-
-            {
-                new: true,
-                runValidators: true
-            }
-
-        );
-
-
-        if (!jewellery) {
-
-            return res.status(404).json({
-
-                message: "Jewellery not found"
-
-            });
-
-        }
-
-
-        res.status(200).json({
-
-            message: "Jewellery updated successfully",
-
-            jewellery
-
-        });
-
-    } catch (error) {
-
-        console.log("UPDATE ERROR:", error);
-
-        res.status(500).json({
-
-            message: error.message
-
-        });
-
-    }
-
-};
-
-
-// ================= DELETE =================
+// =====================================
+// DELETE JEWELLERY
+// =====================================
 
 const deleteJewellery = async (req, res) => {
 
-    try {
+  try {
 
-        const jewellery = await Jewellery.findByIdAndDelete(
-            req.params.id
-        );
+    const jewellery = await Jewellery.findById(
+      req.params.id
+    );
 
+    if (!jewellery) {
 
-        if (!jewellery) {
-
-            return res.status(404).json({
-
-                message: "Jewellery not found"
-
-            });
-
-        }
-
-
-        res.status(200).json({
-
-            message: "Jewellery deleted successfully"
-
-        });
-
-    } catch (error) {
-
-        console.log("DELETE ERROR:", error);
-
-        res.status(500).json({
-
-            message: error.message
-
-        });
+      return res.status(404).json({
+        message: 'Jewellery not found'
+      });
 
     }
+
+    // Delete image from Cloudinary
+    await cloudinary.uploader.destroy(
+      jewellery.imagePublicId
+    );
+
+    // Delete from MongoDB
+    await Jewellery.findByIdAndDelete(
+      req.params.id
+    );
+
+    res.status(200).json({
+      message: 'Jewellery and image deleted successfully'
+    });
+
+  } catch (error) {
+
+    console.log('Delete Error:', error);
+
+    res.status(500).json({
+      message: 'Error deleting jewellery'
+    });
+
+  }
 
 };
 
 
-// ================= EXPORT =================
-
 module.exports = {
 
-    createJewellery,
-    getJewellery,
-    getJewelleryById,
-    updateJewellery,
-    deleteJewellery
+  addJewellery,
+
+  getJewellery,
+
+  getJewelleryById,
+
+  deleteJewellery
 
 };
