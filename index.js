@@ -5,7 +5,10 @@ const path = require('path');
 
 require('dotenv').config();
 
+
 const sareeRouter = require('./routes/sareeRoutes');
+const jewelleryRouter = require('./routes/jewelleryRoutes');
+
 
 const app = express();
 
@@ -17,13 +20,29 @@ app.use(cors());
 app.use(express.json());
 
 
-// ================= STATIC IMAGE FOLDER =================
+// ================= SAREE IMAGES =================
 
 app.use(
+
     '/sareesFolder',
+
     express.static(
         path.join(__dirname, 'sareesFolder')
     )
+
+);
+
+
+// ================= JEWELLERY IMAGES =================
+
+app.use(
+
+    '/jewelleryFolder',
+
+    express.static(
+        path.join(__dirname, 'jewelleryFolder')
+    )
+
 );
 
 
@@ -31,13 +50,17 @@ app.use(
 
 app.use('/sarees', sareeRouter);
 
+app.use('/jewellery', jewelleryRouter);
+
 
 // ================= TEST =================
 
 app.get('/', (req, res) => {
 
     res.json({
+
         message: "Server is running"
+
     });
 
 });
@@ -56,8 +79,10 @@ mongoose.connect(process.env.MONGO_URL)
     .catch((error) => {
 
         console.log(
+
             "Database error:",
             error.message
+
         );
 
     });
@@ -67,8 +92,11 @@ mongoose.connect(process.env.MONGO_URL)
 
 const PORT = process.env.PORT || 5000;
 
+
 app.listen(PORT, () => {
 
-    console.log(`Server running on port ${PORT}`);
+    console.log(
+        `Server running on port ${PORT}`
+    );
 
 });

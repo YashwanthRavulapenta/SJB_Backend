@@ -3,33 +3,40 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
+
 const {
-    createSaree,
-    getSarees,
-    getSareeById,
-    updateSaree,
-    deleteSaree
-} = require('../controllers/sareeController');
+
+    createJewellery,
+    getJewellery,
+    getJewelleryById,
+    updateJewellery,
+    deleteJewellery
+
+} = require('../controllers/jewelleryController');
 
 
-const sareeRouter = express.Router();
+const jewelleryRouter = express.Router();
 
 
 // ================= UPLOAD FOLDER =================
 
 const uploadPath = path.join(
+
     __dirname,
     '..',
-    'sareesFolder'
+    'jewelleryFolder'
+
 );
 
 
-// Create sareesFolder automatically
+// Create jewelleryFolder automatically
 
 if (!fs.existsSync(uploadPath)) {
 
     fs.mkdirSync(uploadPath, {
+
         recursive: true
+
     });
 
 }
@@ -49,6 +56,7 @@ const storage = multer.diskStorage({
     filename: (req, file, cb) => {
 
         const uniqueName =
+
             Date.now() +
             '-' +
             file.originalname;
@@ -61,53 +69,71 @@ const storage = multer.diskStorage({
 
 
 const upload = multer({
+
     storage
+
 });
 
 
 // ================= GET ALL =================
 
-sareeRouter.get(
+jewelleryRouter.get(
+
     '/',
-    getSarees
+
+    getJewellery
+
 );
 
 
 // ================= GET ONE =================
 
-sareeRouter.get(
+jewelleryRouter.get(
+
     '/:id',
-    getSareeById
+
+    getJewelleryById
+
 );
 
 
 // ================= CREATE =================
 
-sareeRouter.post(
+jewelleryRouter.post(
+
     '/',
+
     upload.single('image'),
-    createSaree
+
+    createJewellery
+
 );
 
 
 // ================= UPDATE =================
 
-sareeRouter.put(
+jewelleryRouter.put(
+
     '/:id',
+
     upload.single('image'),
-    updateSaree
+
+    updateJewellery
+
 );
 
 
 // ================= DELETE =================
 
-sareeRouter.delete(
-    '/:id',
-    deleteSaree
-);
+jewelleryRouter.delete(
 
+    '/:id',
+
+    deleteJewellery
+
+);
 
 
 // ================= EXPORT =================
 
-module.exports = sareeRouter;
+module.exports = jewelleryRouter;
