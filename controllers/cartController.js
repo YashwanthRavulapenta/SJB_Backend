@@ -1,280 +1,503 @@
+// controllers/cartController.js
+
 const Cart = require("../models/cartModel");
+
 const Saree = require("../models/sareeModel");
+
 const Jewellery = require("../models/jewelleryModel");
 
 
-// =====================================
+// =========================================
 // ADD TO CART
-// =====================================
+// =========================================
 
 const addToCart = async (req, res) => {
 
     try {
 
-        const { productId, productType } = req.body;
+        const userId = req.userId;
+
+        const {
+            productId,
+            productType
+        } = req.body;
+
+
+        // =====================================
+        // VALIDATION
+        // =====================================
 
         if (!productId || !productType) {
+
             return res.status(400).json({
+
                 success: false,
-                message: "Product ID and product type are required"
+
+                message:
+                    "Product ID and product type are required"
+
             });
         }
+
+
+        // =====================================
+        // VALID PRODUCT TYPE
+        // =====================================
 
         if (
             productType !== "saree" &&
             productType !== "jewellery"
         ) {
+
             return res.status(400).json({
+
                 success: false,
-                message: "Invalid product type"
+
+                message:
+                    "Invalid product type"
+
             });
         }
 
 
-        // Check product exists
+        // =====================================
+        // CHECK PRODUCT EXISTS
+        // =====================================
 
         let product;
 
+
         if (productType === "saree") {
-            product = await Saree.findById(productId);
+
+            product =
+                await Saree.findById(
+                    productId
+                );
+
         } else {
-            product = await Jewellery.findById(productId);
+
+            product =
+                await Jewellery.findById(
+                    productId
+                );
         }
 
+
         if (!product) {
+
             return res.status(404).json({
+
                 success: false,
-                message: "Product not found"
+
+                message:
+                    "Product not found"
+
             });
         }
 
 
-        // Find user's cart
+        // =====================================
+        // FIND USER CART
+        // =====================================
 
-        let cart = await Cart.findOne({
-            userId: req.userId
-        });
+        let cart =
+            await Cart.findOne({
+                userId: userId
+            });
 
 
-        // Create cart
+        // =====================================
+        // CREATE CART IF NOT EXISTS
+        // =====================================
 
         if (!cart) {
 
-            cart = await Cart.create({
-                userId: req.userId,
+            cart =
+                await Cart.create({
 
-                items: [
-                    {
-                        productId,
-                        productType,
-                        quantity: 1
-                    }
-                ]
-            });
+                    userId: userId,
 
-        } else {
+                    items: [
 
-            const existingItem = cart.items.find(
-                item =>
-                    item.productId.toString() === productId &&
-                    item.productType === productType
-            );
+                        {
+                            productId:
+                                productId,
 
+                            productType:
+                                productType,
 
-            if (existingItem) {
+                            quantity: 1
+                        }
 
-                existingItem.quantity += 1;
+                    ]
 
-            } else {
-
-                cart.items.push({
-                    productId,
-                    productType,
-                    quantity: 1
                 });
 
-            }
 
-            await cart.save();
+            return res.status(201).json({
+
+                success: true,
+
+                message:
+                    "Product added to cart",
+
+                cart
+
+            });
         }
 
 
-        res.status(200).json({
+        // =====================================
+        // CHECK IF SAME PRODUCT ALREADY EXISTS
+        // =====================================
+
+        const existingItem =
+            cart.items.find(
+
+                item =>
+
+                    item.productId.toString() ===
+                    productId.toString()
+
+                    &&
+
+                    item.productType ===
+                    productType
+            );
+
+
+        // =====================================
+        // SAME PRODUCT FOUND
+        // =====================================
+
+        if (existingItem) {
+
+            // Increase quantity
+
+            existingItem.quantity += 1;
+
+
+            await cart.save();
+
+
+            return res.status(200).json({
+
+                success: true,
+
+                message:
+                    "Product quantity increased",
+
+                cart
+
+            });
+        }
+
+
+        // =====================================
+        // NEW PRODUCT
+        // =====================================
+
+        cart.items.push({
+
+            productId:
+                productId,
+
+            productType:
+                productType,
+
+            quantity: 1
+
+        });
+
+
+        await cart.save();
+
+
+        return res.status(200).json({
+
             success: true,
-            message: "Product added to cart"
+
+            message:
+                "Product added to cart",
+
+            cart
+
         });
 
 
     } catch (error) {
 
-        console.error("ADD CART ERROR:", error);
+        console.error(
+            "ADD TO CART ERROR:",
+            error
+        );
 
-        res.status(500).json({
+
+        return res.status(500).json({
+
             success: false,
-            message: "Unable to add product to cart"
+
+            message:
+                "Unable to add product to cart"
+
         });
-
     }
-
 };
 
 
 
-// =====================================
+// =========================================
 // GET CART
-// =====================================
+// =========================================
 
 const getCart = async (req, res) => {
 
     try {
 
-        const cart = await Cart.findOne({
-            userId: req.userId
-        });
+        const userId = req.userId;
 
+
+        const cart =
+            await Cart.findOne({
+                userId: userId
+            });
+
+
+        // =====================================
+        // NO CART
+        // =====================================
 
         if (!cart) {
 
             return res.status(200).json({
-                success: true,
-                items: []
-            });
 
+                success: true,
+
+                items: []
+
+            });
         }
 
 
-        const items = [];
+        const cartItems = [];
 
 
-        for (const item of cart.items) {
+        // =====================================
+        // GET ACTUAL PRODUCT DETAILS
+        // =====================================
+
+        for (
+            const item of cart.items
+        ) {
+
 
             let product;
 
 
-            if (item.productType === "saree") {
+            if (
+                item.productType ===
+                "saree"
+            ) {
 
-                product = await Saree.findById(
-                    item.productId
-                );
-
-            } else {
-
-                product = await Jewellery.findById(
-                    item.productId
-                );
+                product =
+                    await Saree.findById(
+                        item.productId
+                    );
 
             }
 
 
-            if (!product) {
-                continue;
+            if (
+                item.productType ===
+                "jewellery"
+            ) {
+
+                product =
+                    await Jewellery.findById(
+                        item.productId
+                    );
+
             }
 
 
-            items.push({
+            // =================================
+            // PRODUCT STILL EXISTS
+            // =================================
 
-                cartItemId: item._id,
+            if (product) {
 
-                productId: product._id,
+                cartItems.push({
 
-                productType: item.productType,
+                    cartItemId:
+                        item._id,
 
-                quantity: item.quantity,
+                    productId:
+                        product._id,
 
-                name: product.name,
+                    productType:
+                        item.productType,
 
-                price: product.price,
+                    quantity:
+                        item.quantity,
 
-                image: product.image,
+                    name:
+                        product.name,
 
-                category: product.category,
+                    price:
+                        product.price,
 
-                color: product.color
+                    image:
+                        product.image,
 
-            });
+                    category:
+                        product.category,
+
+                    color:
+                        product.color
+
+                });
+
+            }
 
         }
 
 
-        res.status(200).json({
+        return res.status(200).json({
+
             success: true,
-            items
+
+            items: cartItems
+
         });
 
 
     } catch (error) {
 
-        console.error("GET CART ERROR:", error);
+        console.error(
+            "GET CART ERROR:",
+            error
+        );
 
-        res.status(500).json({
+
+        return res.status(500).json({
+
             success: false,
-            message: "Unable to get cart"
+
+            message:
+                "Unable to get cart"
+
         });
-
     }
-
 };
 
 
 
-// =====================================
+// =========================================
 // UPDATE QUANTITY
-// =====================================
+// =========================================
 
-const updateQuantity = async (req, res) => {
+const updateQuantity = async (
+    req,
+    res
+) => {
 
     try {
 
-        const { itemId } = req.params;
-        const { quantity } = req.body;
+        const userId = req.userId;
+
+        const itemId =
+            req.params.itemId;
+
+        const {
+            quantity
+        } = req.body;
 
 
-        if (!quantity || quantity < 1) {
+        // =====================================
+        // VALIDATION
+        // =====================================
+
+        if (
+            !quantity ||
+            quantity < 1
+        ) {
 
             return res.status(400).json({
-                success: false,
-                message: "Quantity must be at least 1"
-            });
 
+                success: false,
+
+                message:
+                    "Quantity must be at least 1"
+
+            });
         }
 
 
-        const cart = await Cart.findOne({
-            userId: req.userId
-        });
+        // =====================================
+        // FIND CART
+        // =====================================
+
+        const cart =
+            await Cart.findOne({
+                userId: userId
+            });
 
 
         if (!cart) {
 
             return res.status(404).json({
-                success: false,
-                message: "Cart not found"
-            });
 
+                success: false,
+
+                message:
+                    "Cart not found"
+
+            });
         }
 
 
-        const item = cart.items.id(itemId);
+        // =====================================
+        // FIND ITEM
+        // =====================================
+
+        const item =
+            cart.items.id(itemId);
 
 
         if (!item) {
 
             return res.status(404).json({
-                success: false,
-                message: "Cart item not found"
-            });
 
+                success: false,
+
+                message:
+                    "Cart item not found"
+
+            });
         }
 
 
-        item.quantity = quantity;
+        // =====================================
+        // UPDATE
+        // =====================================
+
+        item.quantity =
+            Number(quantity);
+
 
         await cart.save();
 
 
-        res.status(200).json({
+        return res.status(200).json({
+
             success: true,
-            message: "Quantity updated"
+
+            message:
+                "Quantity updated",
+
+            quantity:
+                item.quantity
+
         });
 
 
@@ -285,64 +508,90 @@ const updateQuantity = async (req, res) => {
             error
         );
 
-        res.status(500).json({
+
+        return res.status(500).json({
+
             success: false,
-            message: "Unable to update quantity"
+
+            message:
+                "Unable to update quantity"
+
         });
-
     }
-
 };
 
 
 
-// =====================================
+// =========================================
 // REMOVE FROM CART
-// =====================================
+// =========================================
 
-const removeFromCart = async (req, res) => {
+const removeFromCart = async (
+    req,
+    res
+) => {
 
     try {
 
-        const { itemId } = req.params;
+        const userId = req.userId;
+
+        const itemId =
+            req.params.itemId;
 
 
-        const cart = await Cart.findOne({
-            userId: req.userId
-        });
+        const cart =
+            await Cart.findOne({
+                userId: userId
+            });
 
 
         if (!cart) {
 
             return res.status(404).json({
-                success: false,
-                message: "Cart not found"
-            });
 
+                success: false,
+
+                message:
+                    "Cart not found"
+
+            });
         }
 
 
-        const item = cart.items.id(itemId);
+        const item =
+            cart.items.id(itemId);
 
 
         if (!item) {
 
             return res.status(404).json({
-                success: false,
-                message: "Cart item not found"
-            });
 
+                success: false,
+
+                message:
+                    "Cart item not found"
+
+            });
         }
 
 
+        // =====================================
+        // REMOVE
+        // =====================================
+
         cart.items.pull(itemId);
+
 
         await cart.save();
 
 
-        res.status(200).json({
+        return res.status(200).json({
+
             success: true,
-            message: "Product removed from cart"
+
+            message:
+                "Product removed from cart"
+
         });
 
 
@@ -353,13 +602,16 @@ const removeFromCart = async (req, res) => {
             error
         );
 
-        res.status(500).json({
+
+        return res.status(500).json({
+
             success: false,
-            message: "Unable to remove product"
+
+            message:
+                "Unable to remove product"
+
         });
-
     }
-
 };
 
 
@@ -367,8 +619,11 @@ const removeFromCart = async (req, res) => {
 module.exports = {
 
     addToCart,
+
     getCart,
+
     updateQuantity,
+
     removeFromCart
 
 };
