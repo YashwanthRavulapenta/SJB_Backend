@@ -1,36 +1,29 @@
 const Cart = require("../models/cartModel");
+const Saree = require("../models/sareeModel");
+const Jewellery = require("../models/jewelleryModel");
 
 
 // =====================================
-// ADD PRODUCT TO CART
+// ADD TO CART
 // =====================================
 
 const addToCart = async (req, res) => {
 
     try {
 
-        const {
-            productId,
-            productType
-        } = req.body;
+        const { productId, productType } = req.body;
 
-
-        // Check data
         if (!productId || !productType) {
-
             return res.status(400).json({
                 success: false,
                 message: "Product ID and product type are required"
             });
         }
 
-
-        // Check product type
         if (
             productType !== "saree" &&
             productType !== "jewellery"
         ) {
-
             return res.status(400).json({
                 success: false,
                 message: "Invalid product type"
@@ -38,154 +31,344 @@ const addToCart = async (req, res) => {
         }
 
 
-        // Find logged-in user's cart
+        // Check product exists
+
+        let product;
+
+        if (productType === "saree") {
+            product = await Saree.findById(productId);
+        } else {
+            product = await Jewellery.findById(productId);
+        }
+
+        if (!product) {
+            return res.status(404).json({
+                success: false,
+                message: "Product not found"
+            });
+        }
+
+
+        // Find user's cart
+
         let cart = await Cart.findOne({
             userId: req.userId
         });
 
 
-        // If user doesn't have a cart
+        // Create cart
+
         if (!cart) {
 
             cart = await Cart.create({
-
                 userId: req.userId,
 
                 items: [
                     {
-                        productId: productId,
-                        productType: productType,
+                        productId,
+                        productType,
                         quantity: 1
                     }
                 ]
-
             });
 
-        }
+        } else {
 
-        // User already has a cart
-        else {
-
-            // Check whether product already exists
-            const existingItem =
-                cart.items.find((item) =>
-
+            const existingItem = cart.items.find(
+                item =>
                     item.productId.toString() === productId &&
                     item.productType === productType
+            );
 
-                );
 
-
-            // Product already in cart
             if (existingItem) {
 
                 existingItem.quantity += 1;
 
-            }
-
-            // New product
-            else {
+            } else {
 
                 cart.items.push({
-
-                    productId: productId,
-                    productType: productType,
+                    productId,
+                    productType,
                     quantity: 1
-
                 });
 
             }
-
 
             await cart.save();
         }
 
 
-        return res.status(200).json({
-
+        res.status(200).json({
             success: true,
-
-            message: "Product added to cart",
-
-            cart: cart
-
+            message: "Product added to cart"
         });
 
 
     } catch (error) {
 
-        console.error(
-            "ADD TO CART ERROR:",
-            error
-        );
+        console.error("ADD CART ERROR:", error);
 
-        return res.status(500).json({
-
+        res.status(500).json({
             success: false,
-
             message: "Unable to add product to cart"
-
         });
+
     }
+
 };
 
 
 
 // =====================================
-// GET USER CART
+// GET CART
 // =====================================
 
 const getCart = async (req, res) => {
 
     try {
 
-        const cart =
-            await Cart.findOne({
-                userId: req.userId
-            });
+        const cart = await Cart.findOne({
+            userId: req.userId
+        });
 
 
-        // User doesn't have a cart yet
         if (!cart) {
 
             return res.status(200).json({
-
                 success: true,
-
                 items: []
-
             });
+
         }
 
 
-        return res.status(200).json({
+        const items = [];
 
+
+        for (const item of cart.items) {
+
+            let product;
+
+
+            if (item.productType === "saree") {
+
+                product = await Saree.findById(
+                    item.productId
+                );
+
+            } else {
+
+                product = await Jewellery.findById(
+                    item.productId
+                );
+
+            }
+
+
+            if (!product) {
+                continue;
+            }
+
+
+            items.push({
+
+                cartItemId: item._id,
+
+                productId: product._id,
+
+                productType: item.productType,
+
+                quantity: item.quantity,
+
+                name: product.name,
+
+                price: product.price,
+
+                image: product.image,
+
+                category: product.category,
+
+                color: product.color
+
+            });
+
+        }
+
+
+        res.status(200).json({
             success: true,
+            items
+        });
 
-            items: cart.items
 
+    } catch (error) {
+
+        console.error("GET CART ERROR:", error);
+
+        res.status(500).json({
+            success: false,
+            message: "Unable to get cart"
+        });
+
+    }
+
+};
+
+
+
+// =====================================
+// UPDATE QUANTITY
+// =====================================
+
+const updateQuantity = async (req, res) => {
+
+    try {
+
+        const { itemId } = req.params;
+        const { quantity } = req.body;
+
+
+        if (!quantity || quantity < 1) {
+
+            return res.status(400).json({
+                success: false,
+                message: "Quantity must be at least 1"
+            });
+
+        }
+
+
+        const cart = await Cart.findOne({
+            userId: req.userId
+        });
+
+
+        if (!cart) {
+
+            return res.status(404).json({
+                success: false,
+                message: "Cart not found"
+            });
+
+        }
+
+
+        const item = cart.items.id(itemId);
+
+
+        if (!item) {
+
+            return res.status(404).json({
+                success: false,
+                message: "Cart item not found"
+            });
+
+        }
+
+
+        item.quantity = quantity;
+
+        await cart.save();
+
+
+        res.status(200).json({
+            success: true,
+            message: "Quantity updated"
         });
 
 
     } catch (error) {
 
         console.error(
-            "GET CART ERROR:",
+            "UPDATE QUANTITY ERROR:",
             error
         );
 
-        return res.status(500).json({
-
+        res.status(500).json({
             success: false,
-
-            message: "Unable to get cart"
-
+            message: "Unable to update quantity"
         });
+
     }
+
 };
 
 
+
+// =====================================
+// REMOVE FROM CART
+// =====================================
+
+const removeFromCart = async (req, res) => {
+
+    try {
+
+        const { itemId } = req.params;
+
+
+        const cart = await Cart.findOne({
+            userId: req.userId
+        });
+
+
+        if (!cart) {
+
+            return res.status(404).json({
+                success: false,
+                message: "Cart not found"
+            });
+
+        }
+
+
+        const item = cart.items.id(itemId);
+
+
+        if (!item) {
+
+            return res.status(404).json({
+                success: false,
+                message: "Cart item not found"
+            });
+
+        }
+
+
+        cart.items.pull(itemId);
+
+        await cart.save();
+
+
+        res.status(200).json({
+            success: true,
+            message: "Product removed from cart"
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            "REMOVE CART ERROR:",
+            error
+        );
+
+        res.status(500).json({
+            success: false,
+            message: "Unable to remove product"
+        });
+
+    }
+
+};
+
+
+
 module.exports = {
+
     addToCart,
-    getCart
+    getCart,
+    updateQuantity,
+    removeFromCart
+
 };
