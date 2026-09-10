@@ -1,60 +1,193 @@
-const Jewellery = require('../models/jewelleryModel');
+const Jewellery = require("../models/jewelleryModel");
 
-const cloudinary = require('../config/cloudinary');
+const cloudinary = require("../config/cloudinary");
 
-const uploadToCloudinary = require('../utils/cloudinaryUpload');
+const uploadToCloudinary = require(
+    "../utils/cloudinaryUpload"
+);
 
 
+// ======================================================
+// HELPER
+// ======================================================
 
-// =====================================
+const convertAvailability = (value, defaultValue = true) => {
+
+    if (value === undefined || value === null) {
+        return defaultValue;
+    }
+
+    if (typeof value === "boolean") {
+        return value;
+    }
+
+    return String(value).toLowerCase() === "true";
+};
+
+
+// ======================================================
 // ADD JEWELLERY
-// =====================================
+// ======================================================
 
 const addJewellery = async (req, res) => {
 
     try {
 
+        console.log("=================================");
+        console.log("ADD JEWELLERY");
+        console.log("BODY:", req.body);
+        console.log("FILE:", req.file);
+        console.log("=================================");
+
+
         const {
             name,
             category,
-            price
+            price,
+            isAvailable
         } = req.body;
 
 
-        if (!req.file) {
+        // ==================================================
+        // VALIDATION
+        // ==================================================
+
+        if (!name || !name.trim()) {
 
             return res.status(400).json({
-                message: 'Please upload an image'
+
+                success: false,
+
+                message:
+                    "Jewellery name is required"
+
             });
 
         }
 
 
-        // Upload image to Cloudinary
-        const result = await uploadToCloudinary(
-            req.file.buffer,
-            'jewellery'
+        if (!category || !category.trim()) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Jewellery category is required"
+
+            });
+
+        }
+
+
+        if (
+            price === undefined ||
+            price === null ||
+            price === "" ||
+            Number(price) < 0
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Valid price is required"
+
+            });
+
+        }
+
+
+        // ==================================================
+        // IMAGE CHECK
+        // ==================================================
+
+        if (!req.file) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Please upload an image"
+
+            });
+
+        }
+
+
+        // ==================================================
+        // CONVERT AVAILABILITY
+        // ==================================================
+
+        const available =
+            convertAvailability(
+                isAvailable,
+                true
+            );
+
+
+        console.log(
+            "isAvailable received:",
+            isAvailable
+        );
+
+        console.log(
+            "isAvailable converted:",
+            available
         );
 
 
-        // Save jewellery in MongoDB
-        const jewellery = await Jewellery.create({
+        // ==================================================
+        // UPLOAD TO CLOUDINARY
+        // ==================================================
 
-            name,
-            category,
-            price,
+        const result =
+            await uploadToCloudinary(
+                req.file.buffer,
+                "jewellery"
+            );
 
-            image: result.secure_url,
 
-            imagePublicId: result.public_id
+        // ==================================================
+        // CREATE JEWELLERY
+        // ==================================================
 
-        });
+        const jewellery =
+            await Jewellery.create({
 
+                name:
+                    name.trim(),
+
+                category:
+                    category.trim(),
+
+                price:
+                    Number(price),
+
+                image:
+                    result.secure_url,
+
+                imagePublicId:
+                    result.public_id,
+
+                isAvailable:
+                    available
+
+            });
+
+
+        // ==================================================
+        // RESPONSE
+        // ==================================================
 
         res.status(201).json({
 
+            success: true,
+
             message:
-                'Jewellery added successfully',
+                "Jewellery added successfully",
 
             jewellery
 
@@ -63,18 +196,21 @@ const addJewellery = async (req, res) => {
 
     } catch (error) {
 
-        console.log(
-            'Add Jewellery Error:',
+        console.error(
+            "ADD JEWELLERY ERROR:",
             error
         );
 
 
         res.status(500).json({
 
-            message:
-                'Error adding jewellery',
+            success: false,
 
-            error: error.message
+            message:
+                "Error adding jewellery",
+
+            error:
+                error.message
 
         });
 
@@ -83,17 +219,20 @@ const addJewellery = async (req, res) => {
 };
 
 
-
-// =====================================
+// ======================================================
 // GET ALL JEWELLERY
-// =====================================
+// ======================================================
 
 const getJewellery = async (req, res) => {
 
     try {
 
-        const jewellery = await Jewellery.find()
-            .sort({ createdAt: -1 });
+        const jewellery =
+            await Jewellery
+                .find()
+                .sort({
+                    createdAt: -1
+                });
 
 
         res.status(200).json(
@@ -103,18 +242,21 @@ const getJewellery = async (req, res) => {
 
     } catch (error) {
 
-        console.log(
-            'Get Jewellery Error:',
+        console.error(
+            "GET JEWELLERY ERROR:",
             error
         );
 
 
         res.status(500).json({
 
-            message:
-                'Error getting jewellery',
+            success: false,
 
-            error: error.message
+            message:
+                "Error getting jewellery",
+
+            error:
+                error.message
 
         });
 
@@ -123,26 +265,28 @@ const getJewellery = async (req, res) => {
 };
 
 
-
-// =====================================
-// GET SINGLE JEWELLERY
-// =====================================
+// ======================================================
+// GET JEWELLERY BY ID
+// ======================================================
 
 const getJewelleryById = async (req, res) => {
 
     try {
 
-        const jewellery = await Jewellery.findById(
-            req.params.id
-        );
+        const jewellery =
+            await Jewellery.findById(
+                req.params.id
+            );
 
 
         if (!jewellery) {
 
             return res.status(404).json({
 
+                success: false,
+
                 message:
-                    'Jewellery not found'
+                    "Jewellery not found"
 
             });
 
@@ -156,16 +300,21 @@ const getJewelleryById = async (req, res) => {
 
     } catch (error) {
 
-        console.log(
-            'Get Jewellery By ID Error:',
+        console.error(
+            "GET JEWELLERY BY ID ERROR:",
             error
         );
 
 
         res.status(500).json({
 
+            success: false,
+
             message:
-                'Error getting jewellery'
+                "Error getting jewellery",
+
+            error:
+                error.message
 
         });
 
@@ -174,90 +323,175 @@ const getJewelleryById = async (req, res) => {
 };
 
 
-
-// =====================================
+// ======================================================
 // UPDATE JEWELLERY
-// =====================================
+// ======================================================
 
 const updateJewellery = async (req, res) => {
 
     try {
 
-        const {
-            name,
-            category,
-            price
-        } = req.body;
+        const jewellery =
+            await Jewellery.findById(
+                req.params.id
+            );
 
 
-        // Find existing jewellery
-        const jewellery = await Jewellery.findById(
-            req.params.id
-        );
-
+        // ==================================================
+        // NOT FOUND
+        // ==================================================
 
         if (!jewellery) {
 
             return res.status(404).json({
 
+                success: false,
+
                 message:
-                    'Jewellery not found'
+                    "Jewellery not found"
 
             });
 
         }
 
 
-        // =====================================
-        // UPDATE NORMAL FIELDS
-        // =====================================
+        // ==================================================
+        // GET FORM DATA
+        // ==================================================
 
-        jewellery.name = name;
+        const {
+            name,
+            category,
+            price,
+            isAvailable
+        } = req.body;
 
-        jewellery.category = category;
 
-        jewellery.price = price;
+        console.log(
+            "UPDATE JEWELLERY BODY:",
+            req.body
+        );
 
 
+        // ==================================================
+        // UPDATE NAME
+        // ==================================================
 
-        // =====================================
-        // IF NEW IMAGE IS SELECTED
-        // =====================================
+        if (
+            name !== undefined &&
+            name.trim() !== ""
+        ) {
+
+            jewellery.name =
+                name.trim();
+
+        }
+
+
+        // ==================================================
+        // UPDATE CATEGORY
+        // ==================================================
+
+        if (
+            category !== undefined &&
+            category.trim() !== ""
+        ) {
+
+            jewellery.category =
+                category.trim();
+
+        }
+
+
+        // ==================================================
+        // UPDATE PRICE
+        // ==================================================
+
+        if (
+            price !== undefined &&
+            price !== ""
+        ) {
+
+            if (Number(price) < 0) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "Price cannot be negative"
+
+                });
+
+            }
+
+            jewellery.price =
+                Number(price);
+
+        }
+
+
+        // ==================================================
+        // UPDATE AVAILABILITY
+        // ==================================================
+
+        if (
+            isAvailable !== undefined
+        ) {
+
+            jewellery.isAvailable =
+                convertAvailability(
+                    isAvailable,
+                    jewellery.isAvailable
+                );
+
+
+            console.log(
+                "UPDATED AVAILABILITY:",
+                jewellery.isAvailable
+            );
+
+        }
+
+
+        // ==================================================
+        // NEW IMAGE
+        // ==================================================
 
         if (req.file) {
 
-            console.log(
-                "New jewellery image received"
-            );
-
-
-            // ---------------------------------
-            // Upload new image
-            // ---------------------------------
+            // ----------------------------------------------
+            // UPLOAD NEW IMAGE
+            // ----------------------------------------------
 
             const result =
                 await uploadToCloudinary(
                     req.file.buffer,
-                    'jewellery'
+                    "jewellery"
                 );
 
 
-            // ---------------------------------
-            // Delete old image
-            // ---------------------------------
+            // ----------------------------------------------
+            // DELETE OLD CLOUDINARY IMAGE
+            // ----------------------------------------------
 
-            if (jewellery.imagePublicId) {
+            if (
+                jewellery.imagePublicId
+            ) {
 
                 try {
 
-                    await cloudinary.uploader.destroy(
-                        jewellery.imagePublicId
-                    );
+                    await cloudinary
+                        .uploader
+                        .destroy(
+                            jewellery.imagePublicId
+                        );
+
 
                 } catch (cloudinaryError) {
 
-                    console.log(
-                        "Old image deletion failed:",
+                    console.error(
+                        "OLD IMAGE DELETE ERROR:",
                         cloudinaryError.message
                     );
 
@@ -266,9 +500,9 @@ const updateJewellery = async (req, res) => {
             }
 
 
-            // ---------------------------------
-            // Save new image
-            // ---------------------------------
+            // ----------------------------------------------
+            // SAVE NEW IMAGE
+            // ----------------------------------------------
 
             jewellery.image =
                 result.secure_url;
@@ -279,39 +513,46 @@ const updateJewellery = async (req, res) => {
         }
 
 
-        // =====================================
+        // ==================================================
         // SAVE
-        // =====================================
+        // ==================================================
 
-        const updatedJewellery =
-            await jewellery.save();
+        await jewellery.save();
 
+
+        // ==================================================
+        // RESPONSE
+        // ==================================================
 
         res.status(200).json({
 
-            message:
-                'Jewellery updated successfully',
+            success: true,
 
-            jewellery:
-                updatedJewellery
+            message:
+                "Jewellery updated successfully",
+
+            jewellery
 
         });
 
 
     } catch (error) {
 
-        console.log(
-            'Update Jewellery Error:',
+        console.error(
+            "UPDATE JEWELLERY ERROR:",
             error
         );
 
 
         res.status(500).json({
 
-            message:
-                'Error updating jewellery',
+            success: false,
 
-            error: error.message
+            message:
+                "Error updating jewellery",
+
+            error:
+                error.message
 
         });
 
@@ -320,70 +561,107 @@ const updateJewellery = async (req, res) => {
 };
 
 
-
-// =====================================
+// ======================================================
 // DELETE JEWELLERY
-// =====================================
+// ======================================================
 
 const deleteJewellery = async (req, res) => {
 
     try {
 
-        const jewellery = await Jewellery.findById(
-            req.params.id
-        );
+        const jewellery =
+            await Jewellery.findById(
+                req.params.id
+            );
 
+
+        // ==================================================
+        // NOT FOUND
+        // ==================================================
 
         if (!jewellery) {
 
             return res.status(404).json({
 
+                success: false,
+
                 message:
-                    'Jewellery not found'
+                    "Jewellery not found"
 
             });
 
         }
 
 
-        // Delete image from Cloudinary
-        if (jewellery.imagePublicId) {
+        // ==================================================
+        // DELETE CLOUDINARY IMAGE
+        // ==================================================
 
-            await cloudinary.uploader.destroy(
-                jewellery.imagePublicId
-            );
+        if (
+            jewellery.imagePublicId
+        ) {
+
+            try {
+
+                await cloudinary
+                    .uploader
+                    .destroy(
+                        jewellery.imagePublicId
+                    );
+
+
+            } catch (cloudinaryError) {
+
+                console.error(
+                    "CLOUDINARY DELETE ERROR:",
+                    cloudinaryError.message
+                );
+
+            }
 
         }
 
 
-        // Delete from MongoDB
+        // ==================================================
+        // DELETE MONGODB DOCUMENT
+        // ==================================================
+
         await Jewellery.findByIdAndDelete(
             req.params.id
         );
 
 
+        // ==================================================
+        // RESPONSE
+        // ==================================================
+
         res.status(200).json({
 
+            success: true,
+
             message:
-                'Jewellery and image deleted successfully'
+                "Jewellery and image deleted successfully"
 
         });
 
 
     } catch (error) {
 
-        console.log(
-            'Delete Error:',
+        console.error(
+            "DELETE JEWELLERY ERROR:",
             error
         );
 
 
         res.status(500).json({
 
-            message:
-                'Error deleting jewellery',
+            success: false,
 
-            error: error.message
+            message:
+                "Error deleting jewellery",
+
+            error:
+                error.message
 
         });
 
@@ -392,6 +670,9 @@ const deleteJewellery = async (req, res) => {
 };
 
 
+// ======================================================
+// EXPORT
+// ======================================================
 
 module.exports = {
 

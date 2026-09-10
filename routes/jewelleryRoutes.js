@@ -1,51 +1,89 @@
-const express = require('express');
+const express = require("express");
 
-const router = express.Router();
+const router =
+    express.Router();
+
+const multer = require("multer");
 
 const {
+
     addJewellery,
+
     getJewellery,
+
     getJewelleryById,
+
     updateJewellery,
+
     deleteJewellery
-} = require('../controllers/jewelleryController');
 
-const upload = require('../middleware/upload');
+} = require(
+    "../controllers/jewelleryController"
+);
 
 
-// GET ALL
+// ======================================================
+// MULTER
+// ======================================================
+
+const storage =
+    multer.memoryStorage();
+
+
+const upload =
+    multer({
+        storage: storage
+    });
+
+
+// ======================================================
+// GET ALL JEWELLERY
+// ======================================================
+
 router.get(
-    '/',
+    "/",
     getJewellery
 );
 
 
-// GET ONE
-router.get(
-    '/:id',
-    getJewelleryById
-);
+// ======================================================
+// ADD JEWELLERY
+// ======================================================
 
-
-// ADD
 router.post(
-    '/add',
-    upload.single('image'),
+    "/add",
+    upload.single("image"),
     addJewellery
 );
 
 
-// UPDATE
+// ======================================================
+// GET JEWELLERY BY ID
+// ======================================================
+
+router.get(
+    "/:id",
+    getJewelleryById
+);
+
+
+// ======================================================
+// UPDATE JEWELLERY
+// ======================================================
+
 router.put(
-    '/:id',
-    upload.single('image'),
+    "/:id",
+    upload.single("image"),
     updateJewellery
 );
 
 
-// DELETE
+// ======================================================
+// DELETE JEWELLERY
+// ======================================================
+
 router.delete(
-    '/:id',
+    "/:id",
     deleteJewellery
 );
 
