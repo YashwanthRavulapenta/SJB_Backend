@@ -37,6 +37,7 @@ const addToCart = async (req, res) => {
                     "Product ID and product type are required"
 
             });
+
         }
 
 
@@ -57,6 +58,7 @@ const addToCart = async (req, res) => {
                     "Invalid product type"
 
             });
+
         }
 
 
@@ -80,8 +82,13 @@ const addToCart = async (req, res) => {
                 await Jewellery.findById(
                     productId
                 );
+
         }
 
+
+        // =====================================
+        // PRODUCT NOT FOUND
+        // =====================================
 
         if (!product) {
 
@@ -93,6 +100,25 @@ const addToCart = async (req, res) => {
                     "Product not found"
 
             });
+
+        }
+
+
+        // =====================================
+        // CHECK PRODUCT AVAILABILITY
+        // =====================================
+
+        if (product.isAvailable === false) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "This product is currently sold out"
+
+            });
+
         }
 
 
@@ -144,6 +170,7 @@ const addToCart = async (req, res) => {
                 cart
 
             });
+
         }
 
 
@@ -163,6 +190,7 @@ const addToCart = async (req, res) => {
 
                     item.productType ===
                     productType
+
             );
 
 
@@ -190,6 +218,7 @@ const addToCart = async (req, res) => {
                 cart
 
             });
+
         }
 
 
@@ -241,7 +270,9 @@ const addToCart = async (req, res) => {
                 "Unable to add product to cart"
 
         });
+
     }
+
 };
 
 
@@ -276,6 +307,7 @@ const getCart = async (req, res) => {
                 items: []
 
             });
+
         }
 
 
@@ -294,6 +326,10 @@ const getCart = async (req, res) => {
             let product;
 
 
+            // =================================
+            // SAREE
+            // =================================
+
             if (
                 item.productType ===
                 "saree"
@@ -306,6 +342,10 @@ const getCart = async (req, res) => {
 
             }
 
+
+            // =================================
+            // JEWELLERY
+            // =================================
 
             if (
                 item.productType ===
@@ -353,7 +393,11 @@ const getCart = async (req, res) => {
                         product.category,
 
                     color:
-                        product.color
+                        product.color,
+
+                    // NEW
+                    isAvailable:
+                        product.isAvailable
 
                 });
 
@@ -387,7 +431,9 @@ const getCart = async (req, res) => {
                 "Unable to get cart"
 
         });
+
     }
+
 };
 
 
@@ -430,6 +476,7 @@ const updateQuantity = async (
                     "Quantity must be at least 1"
 
             });
+
         }
 
 
@@ -453,6 +500,7 @@ const updateQuantity = async (
                     "Cart not found"
 
             });
+
         }
 
 
@@ -474,6 +522,62 @@ const updateQuantity = async (
                     "Cart item not found"
 
             });
+
+        }
+
+
+        // =====================================
+        // CHECK PRODUCT STILL AVAILABLE
+        // =====================================
+
+        let product;
+
+
+        if (
+            item.productType ===
+            "saree"
+        ) {
+
+            product =
+                await Saree.findById(
+                    item.productId
+                );
+
+        } else {
+
+            product =
+                await Jewellery.findById(
+                    item.productId
+                );
+
+        }
+
+
+        if (!product) {
+
+            return res.status(404).json({
+
+                success: false,
+
+                message:
+                    "Product not found"
+
+            });
+
+        }
+
+
+        if (product.isAvailable === false) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "This product is currently sold out"
+
+            });
+
         }
 
 
@@ -517,7 +621,9 @@ const updateQuantity = async (
                 "Unable to update quantity"
 
         });
+
     }
+
 };
 
 
@@ -555,6 +661,7 @@ const removeFromCart = async (
                     "Cart not found"
 
             });
+
         }
 
 
@@ -572,6 +679,7 @@ const removeFromCart = async (
                     "Cart item not found"
 
             });
+
         }
 
 
@@ -611,7 +719,9 @@ const removeFromCart = async (
                 "Unable to remove product"
 
         });
+
     }
+
 };
 
 
