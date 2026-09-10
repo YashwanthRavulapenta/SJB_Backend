@@ -2,9 +2,7 @@ const Jewellery = require('../models/jewelleryModel');
 
 const cloudinary = require('../config/cloudinary');
 
-const uploadToCloudinary = require(
-  '../utils/cloudinaryUpload'
-);
+const uploadToCloudinary = require('../utils/cloudinaryUpload');
 
 
 // =====================================
@@ -13,53 +11,58 @@ const uploadToCloudinary = require(
 
 const addJewellery = async (req, res) => {
 
-  try {
+    try {
 
-    const { name, price, description } = req.body;
+        const { name, category, price } = req.body;
 
-    if (!req.file) {
-      return res.status(400).json({
-        message: 'Please upload an image'
-      });
+        if (!req.file) {
+
+            return res.status(400).json({
+                message: 'Please upload an image'
+            });
+
+        }
+
+        // Upload image to Cloudinary
+        const result = await uploadToCloudinary(
+            req.file.buffer,
+            'jewellery'
+        );
+
+        // Save jewellery in MongoDB
+        const jewellery = await Jewellery.create({
+
+            name,
+            category,
+            price,
+
+            image: result.secure_url,
+
+            imagePublicId: result.public_id
+
+        });
+
+        res.status(201).json({
+
+            message: 'Jewellery added successfully',
+
+            jewellery
+
+        });
+
+    } catch (error) {
+
+        console.log('Add Jewellery Error:', error);
+
+        res.status(500).json({
+
+            message: 'Error adding jewellery',
+
+            error: error.message
+
+        });
+
     }
-
-    // Upload to Cloudinary
-    const result = await uploadToCloudinary(
-      req.file.buffer,
-      'jewellery'
-    );
-
-    // Save in MongoDB
-    const jewellery = await Jewellery.create({
-
-      name,
-      price,
-      description,
-
-      image: result.secure_url,
-
-      imagePublicId: result.public_id
-
-    });
-
-    res.status(201).json({
-
-      message: 'Jewellery added successfully',
-
-      jewellery
-
-    });
-
-  } catch (error) {
-
-    console.log('Add Jewellery Error:', error);
-
-    res.status(500).json({
-      message: 'Error adding jewellery',
-      error: error.message
-    });
-
-  }
 
 };
 
@@ -70,20 +73,26 @@ const addJewellery = async (req, res) => {
 
 const getJewellery = async (req, res) => {
 
-  try {
+    try {
 
-    const jewellery = await Jewellery.find()
-      .sort({ createdAt: -1 });
+        const jewellery = await Jewellery.find()
+            .sort({ createdAt: -1 });
 
-    res.status(200).json(jewellery);
+        res.status(200).json(jewellery);
 
-  } catch (error) {
+    } catch (error) {
 
-    res.status(500).json({
-      message: 'Error getting jewellery'
-    });
+        console.log('Get Jewellery Error:', error);
 
-  }
+        res.status(500).json({
+
+            message: 'Error getting jewellery',
+
+            error: error.message
+
+        });
+
+    }
 
 };
 
@@ -94,29 +103,37 @@ const getJewellery = async (req, res) => {
 
 const getJewelleryById = async (req, res) => {
 
-  try {
+    try {
 
-    const jewellery = await Jewellery.findById(
-      req.params.id
-    );
+        const jewellery = await Jewellery.findById(
+            req.params.id
+        );
 
-    if (!jewellery) {
+        if (!jewellery) {
 
-      return res.status(404).json({
-        message: 'Jewellery not found'
-      });
+            return res.status(404).json({
+
+                message: 'Jewellery not found'
+
+            });
+
+        }
+
+        res.status(200).json(jewellery);
+
+    } catch (error) {
+
+        console.log('Get Jewellery By ID Error:', error);
+
+        res.status(500).json({
+
+            message: 'Error getting jewellery',
+
+            error: error.message
+
+        });
 
     }
-
-    res.status(200).json(jewellery);
-
-  } catch (error) {
-
-    res.status(500).json({
-      message: 'Error getting jewellery'
-    });
-
-  }
 
 };
 
@@ -127,55 +144,63 @@ const getJewelleryById = async (req, res) => {
 
 const deleteJewellery = async (req, res) => {
 
-  try {
+    try {
 
-    const jewellery = await Jewellery.findById(
-      req.params.id
-    );
+        const jewellery = await Jewellery.findById(
+            req.params.id
+        );
 
-    if (!jewellery) {
+        if (!jewellery) {
 
-      return res.status(404).json({
-        message: 'Jewellery not found'
-      });
+            return res.status(404).json({
+
+                message: 'Jewellery not found'
+
+            });
+
+        }
+
+        // Delete image from Cloudinary
+        await cloudinary.uploader.destroy(
+            jewellery.imagePublicId
+        );
+
+        // Delete from MongoDB
+        await Jewellery.findByIdAndDelete(
+            req.params.id
+        );
+
+        res.status(200).json({
+
+            message: 'Jewellery and image deleted successfully'
+
+        });
+
+    } catch (error) {
+
+        console.log('Delete Error:', error);
+
+        res.status(500).json({
+
+            message: 'Error deleting jewellery',
+
+            error: error.message
+
+        });
 
     }
-
-    // Delete image from Cloudinary
-    await cloudinary.uploader.destroy(
-      jewellery.imagePublicId
-    );
-
-    // Delete from MongoDB
-    await Jewellery.findByIdAndDelete(
-      req.params.id
-    );
-
-    res.status(200).json({
-      message: 'Jewellery and image deleted successfully'
-    });
-
-  } catch (error) {
-
-    console.log('Delete Error:', error);
-
-    res.status(500).json({
-      message: 'Error deleting jewellery'
-    });
-
-  }
 
 };
 
 
 module.exports = {
 
-  addJewellery,
+    addJewellery,
 
-  getJewellery,
+    getJewellery,
 
-  getJewelleryById,
+    getJewelleryById,
 
-  deleteJewellery
+    deleteJewellery
 
 };
