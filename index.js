@@ -7,6 +7,7 @@ const connectDB = require('./config/db');
 
 const sareeRoutes = require('./routes/sareeRoutes');
 const jewelleryRoutes = require('./routes/jewelleryRoutes');
+const appointmentRoutes = require('./routes/appointmentRoutes');
 
 
 const app = express();
@@ -35,6 +36,10 @@ app.use(express.json());
 app.use('/api/sarees', sareeRoutes);
 
 app.use('/api/jewellery', jewelleryRoutes);
+
+app.use('/api/appointments',appointmentRoutes);
+
+
 
 
 // ==========================================

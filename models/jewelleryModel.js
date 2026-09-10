@@ -1,21 +1,22 @@
-const mongoose = require('mongoose');
+// models/Jewellery.js
+
+const mongoose = require("mongoose");
 
 const jewellerySchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: true,
-      trim: true
+      required: true
+    },
+
+    category: {
+      type: String,
+      required: true
     },
 
     price: {
       type: Number,
       required: true
-    },
-
-    description: {
-      type: String,
-      trim: true
     },
 
     image: {
@@ -33,4 +34,4 @@ const jewellerySchema = new mongoose.Schema(
   }
 );
 
-module.exports = mongoose.model('Jewellery', jewellerySchema);
+module.exports = mongoose.model("Jewellery", jewellerySchema);
