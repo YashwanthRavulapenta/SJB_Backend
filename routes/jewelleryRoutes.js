@@ -2,38 +2,51 @@ const express = require('express');
 
 const router = express.Router();
 
-const upload = require('../middleware/upload');
-
 const {
-  addJewellery,
-  getJewellery,
-  getJewelleryById,
-  deleteJewellery
+    addJewellery,
+    getJewellery,
+    getJewelleryById,
+    updateJewellery,
+    deleteJewellery
 } = require('../controllers/jewelleryController');
 
+const upload = require('../middleware/upload');
 
+
+// GET ALL
+router.get(
+    '/',
+    getJewellery
+);
+
+
+// GET ONE
+router.get(
+    '/:id',
+    getJewelleryById
+);
+
+
+// ADD
 router.post(
-  '/add',
-  upload.single('image'),
-  addJewellery
+    '/add',
+    upload.single('image'),
+    addJewellery
 );
 
 
-router.get(
-  '/',
-  getJewellery
+// UPDATE
+router.put(
+    '/:id',
+    upload.single('image'),
+    updateJewellery
 );
 
 
-router.get(
-  '/:id',
-  getJewelleryById
-);
-
-
+// DELETE
 router.delete(
-  '/:id',
-  deleteJewellery
+    '/:id',
+    deleteJewellery
 );
 
 

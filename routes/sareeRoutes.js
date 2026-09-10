@@ -2,38 +2,51 @@ const express = require('express');
 
 const router = express.Router();
 
-const upload = require('../middleware/upload');
-
 const {
-  addSaree,
-  getSarees,
-  getSareeById,
-  deleteSaree
+    addSaree,
+    getSarees,
+    getSareeById,
+    updateSaree,
+    deleteSaree
 } = require('../controllers/sareeController');
 
+const upload = require('../middleware/upload');
 
+
+// GET ALL
+router.get(
+    '/',
+    getSarees
+);
+
+
+// GET ONE
+router.get(
+    '/:id',
+    getSareeById
+);
+
+
+// ADD
 router.post(
-  '/add',
-  upload.single('image'),
-  addSaree
+    '/add',
+    upload.single('image'),
+    addSaree
 );
 
 
-router.get(
-  '/',
-  getSarees
+// UPDATE
+router.put(
+    '/:id',
+    upload.single('image'),
+    updateSaree
 );
 
 
-router.get(
-  '/:id',
-  getSareeById
-);
-
-
+// DELETE
 router.delete(
-  '/:id',
-  deleteSaree
+    '/:id',
+    deleteSaree
 );
 
 

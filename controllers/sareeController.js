@@ -25,9 +25,11 @@ const addSaree = async (req, res) => {
 
 
         if (!req.file) {
+
             return res.status(400).json({
                 message: 'Please upload an image'
             });
+
         }
 
 
@@ -79,6 +81,7 @@ const addSaree = async (req, res) => {
 };
 
 
+
 // =====================================
 // GET ALL SAREES
 // =====================================
@@ -103,6 +106,7 @@ const getSarees = async (req, res) => {
 };
 
 
+
 // =====================================
 // GET SINGLE SAREE
 // =====================================
@@ -111,7 +115,10 @@ const getSareeById = async (req, res) => {
 
     try {
 
-        const saree = await Saree.findById(req.params.id);
+        const saree = await Saree.findById(
+            req.params.id
+        );
+
 
         if (!saree) {
 
@@ -121,9 +128,16 @@ const getSareeById = async (req, res) => {
 
         }
 
+
         res.status(200).json(saree);
 
+
     } catch (error) {
+
+        console.log(
+            'Get Saree By ID Error:',
+            error
+        );
 
         res.status(500).json({
             message: 'Error getting saree'
@@ -134,15 +148,23 @@ const getSareeById = async (req, res) => {
 };
 
 
+
 // =====================================
-// DELETE SAREE
+// UPDATE SAREE
 // =====================================
 
-const deleteSaree = async (req, res) => {
+const updateSaree = async (req, res) => {
 
     try {
 
-        const saree = await Saree.findById(req.params.id);
+        const { name, category, color, price } = req.body;
+
+
+        // Find existing saree
+        const saree = await Saree.findById(
+            req.params.id
+        );
+
 
         if (!saree) {
 
@@ -152,26 +174,103 @@ const deleteSaree = async (req, res) => {
 
         }
 
-        // Delete image from Cloudinary
-        await cloudinary.uploader.destroy(
-            saree.imagePublicId
-        );
+
+        // =====================================
+        // UPDATE NORMAL FIELDS
+        // =====================================
+
+        saree.name = name;
+        saree.category = category;
+        saree.color = color;
+        saree.price = price;
 
 
-        // Delete from MongoDB
-        await Saree.findByIdAndDelete(req.params.id);
+        // =====================================
+        // IF NEW IMAGE IS SELECTED
+        // =====================================
+
+        if (req.file) {
+
+            console.log(
+                "New saree image received"
+            );
+
+
+            // ---------------------------------
+            // Upload new image
+            // ---------------------------------
+
+            const result = await uploadToCloudinary(
+                req.file.buffer,
+                'sarees'
+            );
+
+
+            // ---------------------------------
+            // Delete old image from Cloudinary
+            // ---------------------------------
+
+            if (saree.imagePublicId) {
+
+                try {
+
+                    await cloudinary.uploader.destroy(
+                        saree.imagePublicId
+                    );
+
+                } catch (cloudinaryError) {
+
+                    console.log(
+                        "Old image deletion failed:",
+                        cloudinaryError.message
+                    );
+
+                }
+
+            }
+
+
+            // ---------------------------------
+            // Save new image information
+            // ---------------------------------
+
+            saree.image = result.secure_url;
+
+            saree.imagePublicId = result.public_id;
+
+        }
+
+
+        // =====================================
+        // SAVE UPDATED SAREE
+        // =====================================
+
+        const updatedSaree = await saree.save();
 
 
         res.status(200).json({
-            message: 'Saree and image deleted successfully'
+
+            message: 'Saree updated successfully',
+
+            saree: updatedSaree
+
         });
+
 
     } catch (error) {
 
-        console.log('Delete Error:', error);
+        console.log(
+            'Update Saree Error:',
+            error
+        );
+
 
         res.status(500).json({
-            message: 'Error deleting saree'
+
+            message: 'Error updating saree',
+
+            error: error.message
+
         });
 
     }
@@ -179,11 +278,85 @@ const deleteSaree = async (req, res) => {
 };
 
 
+
+// =====================================
+// DELETE SAREE
+// =====================================
+
+const deleteSaree = async (req, res) => {
+
+    try {
+
+        const saree = await Saree.findById(
+            req.params.id
+        );
+
+
+        if (!saree) {
+
+            return res.status(404).json({
+                message: 'Saree not found'
+            });
+
+        }
+
+
+        // Delete image from Cloudinary
+        if (saree.imagePublicId) {
+
+            await cloudinary.uploader.destroy(
+                saree.imagePublicId
+            );
+
+        }
+
+
+        // Delete from MongoDB
+        await Saree.findByIdAndDelete(
+            req.params.id
+        );
+
+
+        res.status(200).json({
+
+            message:
+                'Saree and image deleted successfully'
+
+        });
+
+
+    } catch (error) {
+
+        console.log(
+            'Delete Error:',
+            error
+        );
+
+
+        res.status(500).json({
+
+            message: 'Error deleting saree',
+
+            error: error.message
+
+        });
+
+    }
+
+};
+
+
+
 module.exports = {
 
     addSaree,
+
     getSarees,
+
     getSareeById,
+
+    updateSaree,
+
     deleteSaree
 
 };
