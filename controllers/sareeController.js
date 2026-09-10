@@ -2,7 +2,8 @@ const Saree = require('../models/sareeModel');
 
 const cloudinary = require('../config/cloudinary');
 
-const uploadToCloudinary = require('../utils/cloudinaryUpload');
+const uploadToCloudinary =
+    require('../utils/cloudinaryUpload');
 
 
 // =====================================
@@ -17,47 +18,108 @@ const addSaree = async (req, res) => {
             name,
             category,
             color,
-            price
+            price,
+            isAvailable
         } = req.body;
 
 
-        console.log("REQ.BODY:", req.body);
+        console.log(
+            "REQ.BODY:",
+            req.body
+        );
 
+
+        // =====================================
+        // IMAGE CHECK
+        // =====================================
 
         if (!req.file) {
 
             return res.status(400).json({
-                message: 'Please upload an image'
+
+                message:
+                    'Please upload an image'
+
             });
 
         }
 
 
-        // Upload image to Cloudinary
-        const result = await uploadToCloudinary(
-            req.file.buffer,
-            'sarees'
-        );
+        // =====================================
+        // UPLOAD IMAGE TO CLOUDINARY
+        // =====================================
+
+        const result =
+            await uploadToCloudinary(
+                req.file.buffer,
+                'sarees'
+            );
 
 
-        // Save in MongoDB
-        const saree = await Saree.create({
+        // =====================================
+        // AVAILABILITY
+        // =====================================
 
-            name,
-            category,
-            color,
-            price,
+        /*
+            FormData sends values as strings.
 
-            image: result.secure_url,
+            "true"  -> true
+            "false" -> false
 
-            imagePublicId: result.public_id
+            If the field isn't sent,
+            we make it available.
+        */
 
-        });
+        let availability = true;
 
+
+        if (
+            isAvailable !== undefined
+        ) {
+
+            availability =
+                isAvailable === "false"
+                    ? false
+                    : true;
+
+        }
+
+
+        // =====================================
+        // SAVE IN MONGODB
+        // =====================================
+
+        const saree =
+            await Saree.create({
+
+                name,
+
+                category,
+
+                color,
+
+                price,
+
+                image:
+                    result.secure_url,
+
+                imagePublicId:
+                    result.public_id,
+
+                isAvailable:
+                    availability
+
+            });
+
+
+        // =====================================
+        // RESPONSE
+        // =====================================
 
         res.status(201).json({
 
-            message: 'Saree added successfully',
+            message:
+                'Saree added successfully',
 
             saree
 
@@ -66,13 +128,19 @@ const addSaree = async (req, res) => {
 
     } catch (error) {
 
-        console.log('Add Saree Error:', error);
+        console.log(
+            'Add Saree Error:',
+            error
+        );
+
 
         res.status(500).json({
 
-            message: 'Error adding saree',
+            message:
+                'Error adding saree',
 
-            error: error.message
+            error:
+                error.message
 
         });
 
@@ -86,19 +154,38 @@ const addSaree = async (req, res) => {
 // GET ALL SAREES
 // =====================================
 
-const getSarees = async (req, res) => {
+const getSarees = async (
+    req,
+    res
+) => {
 
     try {
 
-        const sarees = await Saree.find()
-            .sort({ createdAt: -1 });
+        const sarees =
+            await Saree.find()
+                .sort({
+                    createdAt: -1
+                });
 
-        res.status(200).json(sarees);
+
+        res.status(200).json(
+            sarees
+        );
+
 
     } catch (error) {
 
+        console.log(
+            'Get Sarees Error:',
+            error
+        );
+
+
         res.status(500).json({
-            message: 'Error getting sarees'
+
+            message:
+                'Error getting sarees'
+
         });
 
     }
@@ -111,25 +198,34 @@ const getSarees = async (req, res) => {
 // GET SINGLE SAREE
 // =====================================
 
-const getSareeById = async (req, res) => {
+const getSareeById = async (
+    req,
+    res
+) => {
 
     try {
 
-        const saree = await Saree.findById(
-            req.params.id
-        );
+        const saree =
+            await Saree.findById(
+                req.params.id
+            );
 
 
         if (!saree) {
 
             return res.status(404).json({
-                message: 'Saree not found'
+
+                message:
+                    'Saree not found'
+
             });
 
         }
 
 
-        res.status(200).json(saree);
+        res.status(200).json(
+            saree
+        );
 
 
     } catch (error) {
@@ -139,8 +235,12 @@ const getSareeById = async (req, res) => {
             error
         );
 
+
         res.status(500).json({
-            message: 'Error getting saree'
+
+            message:
+                'Error getting saree'
+
         });
 
     }
@@ -153,23 +253,39 @@ const getSareeById = async (req, res) => {
 // UPDATE SAREE
 // =====================================
 
-const updateSaree = async (req, res) => {
+const updateSaree = async (
+    req,
+    res
+) => {
 
     try {
 
-        const { name, category, color, price } = req.body;
+        const {
+            name,
+            category,
+            color,
+            price,
+            isAvailable
+        } = req.body;
 
 
-        // Find existing saree
-        const saree = await Saree.findById(
-            req.params.id
-        );
+        // =====================================
+        // FIND SAREE
+        // =====================================
+
+        const saree =
+            await Saree.findById(
+                req.params.id
+            );
 
 
         if (!saree) {
 
             return res.status(404).json({
-                message: 'Saree not found'
+
+                message:
+                    'Saree not found'
+
             });
 
         }
@@ -179,14 +295,37 @@ const updateSaree = async (req, res) => {
         // UPDATE NORMAL FIELDS
         // =====================================
 
-        saree.name = name;
-        saree.category = category;
-        saree.color = color;
-        saree.price = price;
+        saree.name =
+            name;
+
+        saree.category =
+            category;
+
+        saree.color =
+            color;
+
+        saree.price =
+            price;
 
 
         // =====================================
-        // IF NEW IMAGE IS SELECTED
+        // UPDATE AVAILABILITY
+        // =====================================
+
+        if (
+            isAvailable !== undefined
+        ) {
+
+            saree.isAvailable =
+                isAvailable === "false"
+                    ? false
+                    : true;
+
+        }
+
+
+        // =====================================
+        // NEW IMAGE
         // =====================================
 
         if (req.file) {
@@ -197,28 +336,36 @@ const updateSaree = async (req, res) => {
 
 
             // ---------------------------------
-            // Upload new image
+            // UPLOAD NEW IMAGE
             // ---------------------------------
 
-            const result = await uploadToCloudinary(
-                req.file.buffer,
-                'sarees'
-            );
+            const result =
+                await uploadToCloudinary(
+                    req.file.buffer,
+                    'sarees'
+                );
 
 
             // ---------------------------------
-            // Delete old image from Cloudinary
+            // DELETE OLD IMAGE
             // ---------------------------------
 
-            if (saree.imagePublicId) {
+            if (
+                saree.imagePublicId
+            ) {
 
                 try {
 
-                    await cloudinary.uploader.destroy(
-                        saree.imagePublicId
-                    );
+                    await cloudinary
+                        .uploader
+                        .destroy(
+                            saree.imagePublicId
+                        );
 
-                } catch (cloudinaryError) {
+
+                } catch (
+                    cloudinaryError
+                ) {
 
                     console.log(
                         "Old image deletion failed:",
@@ -231,28 +378,37 @@ const updateSaree = async (req, res) => {
 
 
             // ---------------------------------
-            // Save new image information
+            // SAVE NEW IMAGE
             // ---------------------------------
 
-            saree.image = result.secure_url;
+            saree.image =
+                result.secure_url;
 
-            saree.imagePublicId = result.public_id;
+            saree.imagePublicId =
+                result.public_id;
 
         }
 
 
         // =====================================
-        // SAVE UPDATED SAREE
+        // SAVE
         // =====================================
 
-        const updatedSaree = await saree.save();
+        const updatedSaree =
+            await saree.save();
 
+
+        // =====================================
+        // RESPONSE
+        // =====================================
 
         res.status(200).json({
 
-            message: 'Saree updated successfully',
+            message:
+                'Saree updated successfully',
 
-            saree: updatedSaree
+            saree:
+                updatedSaree
 
         });
 
@@ -267,9 +423,11 @@ const updateSaree = async (req, res) => {
 
         res.status(500).json({
 
-            message: 'Error updating saree',
+            message:
+                'Error updating saree',
 
-            error: error.message
+            error:
+                error.message
 
         });
 
@@ -283,35 +441,52 @@ const updateSaree = async (req, res) => {
 // DELETE SAREE
 // =====================================
 
-const deleteSaree = async (req, res) => {
+const deleteSaree = async (
+    req,
+    res
+) => {
 
     try {
 
-        const saree = await Saree.findById(
-            req.params.id
-        );
+        const saree =
+            await Saree.findById(
+                req.params.id
+            );
 
 
         if (!saree) {
 
             return res.status(404).json({
-                message: 'Saree not found'
+
+                message:
+                    'Saree not found'
+
             });
 
         }
 
 
-        // Delete image from Cloudinary
-        if (saree.imagePublicId) {
+        // =====================================
+        // DELETE CLOUDINARY IMAGE
+        // =====================================
 
-            await cloudinary.uploader.destroy(
-                saree.imagePublicId
-            );
+        if (
+            saree.imagePublicId
+        ) {
+
+            await cloudinary
+                .uploader
+                .destroy(
+                    saree.imagePublicId
+                );
 
         }
 
 
-        // Delete from MongoDB
+        // =====================================
+        // DELETE MONGODB DOCUMENT
+        // =====================================
+
         await Saree.findByIdAndDelete(
             req.params.id
         );
@@ -335,9 +510,11 @@ const deleteSaree = async (req, res) => {
 
         res.status(500).json({
 
-            message: 'Error deleting saree',
+            message:
+                'Error deleting saree',
 
-            error: error.message
+            error:
+                error.message
 
         });
 

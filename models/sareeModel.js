@@ -4,22 +4,26 @@ const sareeSchema = new mongoose.Schema(
     {
         name: {
             type: String,
-            required: true
+            required: true,
+            trim: true
         },
 
         category: {
             type: String,
-            required: true
+            required: true,
+            trim: true
         },
 
         color: {
             type: String,
-            required: true
+            required: true,
+            trim: true
         },
 
         price: {
             type: Number,
-            required: true
+            required: true,
+            min: 0
         },
 
         image: {
@@ -30,11 +34,23 @@ const sareeSchema = new mongoose.Schema(
         imagePublicId: {
             type: String,
             required: true
+        },
+
+        // =====================================
+        // AVAILABILITY
+        // =====================================
+
+        isAvailable: {
+            type: Boolean,
+            default: true
         }
     },
+
     {
         timestamps: true
     }
 );
 
-module.exports = mongoose.model("Saree", sareeSchema);
+
+module.exports =
+    mongoose.model("Saree", sareeSchema);
