@@ -8,6 +8,8 @@ const connectDB = require('./config/db');
 const sareeRoutes = require('./routes/sareeRoutes');
 const jewelleryRoutes = require('./routes/jewelleryRoutes');
 const appointmentRoutes = require('./routes/appointmentRoutes');
+const authRoutes = require("./routes/authRoutes");
+const cartRoutes = require("./routes/cartRoutes");
 
 
 const app = express();
@@ -33,12 +35,15 @@ app.use(express.json());
 // ROUTES
 // ==========================================
 
+app.use("/api/auth",authRoutes);
+
 app.use('/api/sarees', sareeRoutes);
 
 app.use('/api/jewellery', jewelleryRoutes);
 
-app.use('/api/appointments',appointmentRoutes);
+app.use('/api/appointments', appointmentRoutes);
 
+app.use("/api/cart", cartRoutes);
 
 
 
