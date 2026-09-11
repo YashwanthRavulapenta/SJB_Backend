@@ -10,6 +10,8 @@ const jewelleryRoutes = require('./routes/jewelleryRoutes');
 const appointmentRoutes = require('./routes/appointmentRoutes');
 const authRoutes = require("./routes/authRoutes");
 const cartRoutes = require("./routes/cartRoutes");
+const orderRoutes = require("./routes/orderRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
 
 
 const app = express();
@@ -44,6 +46,10 @@ app.use('/api/jewellery', jewelleryRoutes);
 app.use('/api/appointments', appointmentRoutes);
 
 app.use("/api/cart", cartRoutes);
+
+app.use("/api/orders",orderRoutes);
+
+app.use("/api/payment",paymentRoutes);
 
 
 
