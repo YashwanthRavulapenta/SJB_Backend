@@ -49,7 +49,7 @@ app.use("/api/cart", cartRoutes);
 
 app.use("/api/orders",orderRoutes);
 
-app.use("/api/payment",paymentRoutes);
+app.use("/api/payments",paymentRoutes);
 
 
 
