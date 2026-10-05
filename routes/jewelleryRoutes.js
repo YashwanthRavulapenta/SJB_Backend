@@ -1,25 +1,21 @@
 const express = require("express");
-
-const router =
-    express.Router();
+const router = express.Router();
 
 const multer = require("multer");
 
 const {
-
     addJewellery,
-
     getJewellery,
-
     getJewelleryById,
-
     updateJewellery,
-
     deleteJewellery
+} = require("../controllers/jewelleryController");
 
-} = require(
-    "../controllers/jewelleryController"
-);
+const protect =
+    require("../middleware/authMiddleware");
+
+const adminOnly =
+    require("../middleware/adminMiddleware");
 
 
 // ======================================================
@@ -29,7 +25,6 @@ const {
 const storage =
     multer.memoryStorage();
 
-
 const upload =
     multer({
         storage: storage
@@ -38,6 +33,7 @@ const upload =
 
 // ======================================================
 // GET ALL JEWELLERY
+// PUBLIC
 // ======================================================
 
 router.get(
@@ -47,18 +43,8 @@ router.get(
 
 
 // ======================================================
-// ADD JEWELLERY
-// ======================================================
-
-router.post(
-    "/add",
-    upload.single("image"),
-    addJewellery
-);
-
-
-// ======================================================
 // GET JEWELLERY BY ID
+// PUBLIC
 // ======================================================
 
 router.get(
@@ -68,11 +54,28 @@ router.get(
 
 
 // ======================================================
+// ADD JEWELLERY
+// ADMIN ONLY
+// ======================================================
+
+router.post(
+    "/add",
+    protect,
+    adminOnly,
+    upload.single("image"),
+    addJewellery
+);
+
+
+// ======================================================
 // UPDATE JEWELLERY
+// ADMIN ONLY
 // ======================================================
 
 router.put(
     "/:id",
+    protect,
+    adminOnly,
     upload.single("image"),
     updateJewellery
 );
@@ -80,10 +83,13 @@ router.put(
 
 // ======================================================
 // DELETE JEWELLERY
+// ADMIN ONLY
 // ======================================================
 
 router.delete(
     "/:id",
+    protect,
+    adminOnly,
     deleteJewellery
 );
 

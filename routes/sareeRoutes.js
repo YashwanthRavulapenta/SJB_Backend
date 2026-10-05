@@ -1,6 +1,7 @@
-const express = require('express');
-
+const express = require("express");
 const router = express.Router();
+
+const multer = require("multer");
 
 const {
     addSaree,
@@ -8,44 +9,87 @@ const {
     getSareeById,
     updateSaree,
     deleteSaree
-} = require('../controllers/sareeController');
+} = require("../controllers/sareeController");
 
-const upload = require('../middleware/upload');
+const protect =
+    require("../middleware/authMiddleware");
+
+const adminOnly =
+    require("../middleware/adminMiddleware");
 
 
-// GET ALL
+// ======================================================
+// MULTER
+// ======================================================
+
+const storage =
+    multer.memoryStorage();
+
+const upload =
+    multer({
+        storage: storage
+    });
+
+
+// ======================================================
+// GET ALL SAREES
+// PUBLIC
+// ======================================================
+
 router.get(
-    '/',
+    "/",
     getSarees
 );
 
 
-// GET ONE
+// ======================================================
+// GET SAREE BY ID
+// PUBLIC
+// ======================================================
+
 router.get(
-    '/:id',
+    "/:id",
     getSareeById
 );
 
 
-// ADD
+// ======================================================
+// ADD SAREE
+// ADMIN ONLY
+// ======================================================
+
 router.post(
-    '/add',
-    upload.single('image'),
+    "/add",
+    protect,
+    adminOnly,
+    upload.single("image"),
     addSaree
 );
 
 
-// UPDATE
+// ======================================================
+// UPDATE SAREE
+// ADMIN ONLY
+// ======================================================
+
 router.put(
-    '/:id',
-    upload.single('image'),
+    "/:id",
+    protect,
+    adminOnly,
+    upload.single("image"),
     updateSaree
 );
 
 
-// DELETE
+// ======================================================
+// DELETE SAREE
+// ADMIN ONLY
+// ======================================================
+
 router.delete(
-    '/:id',
+    "/:id",
+    protect,
+    adminOnly,
     deleteSaree
 );
 
