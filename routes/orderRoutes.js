@@ -2,11 +2,25 @@ const express = require("express");
 
 const router = express.Router();
 
+
+// =====================================================
+// CONTROLLERS
+// =====================================================
+
 const {
+    createOrder,
+    getMyOrders,
+    getOrderById,
+
     getAllOrdersAdmin,
     getOrderByIdAdmin,
     updateOrderStatusAdmin
 } = require("../controllers/orderController");
+
+
+// =====================================================
+// MIDDLEWARE
+// =====================================================
 
 const protect =
     require("../middleware/authMiddleware");
@@ -14,51 +28,34 @@ const protect =
 const adminOnly =
     require("../middleware/adminMiddleware");
 
-const {
-    createOrder,
-    getMyOrders,
-    getOrderById
-} = require("../controllers/orderController");
 
-const authMiddleware =
-    require("../middleware/authMiddleware");
-
-
-// ==========================================================================
-// CREATE ORDER
-// ==========================================================================
+// =====================================================
+// CUSTOMER - CREATE ORDER
+// =====================================================
 
 router.post(
     "/create",
-    authMiddleware,
+    protect,
     createOrder
 );
 
 
-// ==========================================================================
-// GET ALL MY ORDERS
-// ==========================================================================
+// =====================================================
+// CUSTOMER - GET MY ORDERS
+// =====================================================
 
 router.get(
     "/my-orders",
-    authMiddleware,
+    protect,
     getMyOrders
-);
-
-
-// ==========================================================================
-// GET SINGLE ORDER
-// ==========================================================================
-
-router.get(
-    "/:id",
-    authMiddleware,
-    getOrderById
 );
 
 
 // =====================================================
 // ADMIN - GET ALL ORDERS
+//
+// IMPORTANT:
+// Admin routes MUST come before "/:id"
 // =====================================================
 
 router.get(
@@ -90,6 +87,19 @@ router.put(
     protect,
     adminOnly,
     updateOrderStatusAdmin
+);
+
+
+// =====================================================
+// CUSTOMER - GET SINGLE ORDER
+//
+// KEEP THIS LAST
+// =====================================================
+
+router.get(
+    "/:id",
+    protect,
+    getOrderById
 );
 
 
