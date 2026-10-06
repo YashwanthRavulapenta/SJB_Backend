@@ -256,69 +256,71 @@ const createOrder = async (req, res) => {
         // -------------------------------------------------
 
         const order =
-            await Order.create({
+    await Order.create({
 
-                // IMPORTANT:
-                // orderModel uses "user"
-                // authMiddleware gives us "req.userId"
+        user: userId,
 
-                user: userId,
+        items:
+            orderItems,
 
-                items:
-                    orderItems,
+        shippingAddress: {
 
-                shippingAddress: {
+            fullName:
+                req.body.shippingAddress
+                    .fullName
+                    .trim(),
 
-                    fullName:
-                        req.body.shippingAddress
-                            .fullName
-                            .trim(),
+            phone:
+                req.body.shippingAddress
+                    .phone
+                    .trim(),
 
-                    phone:
-                        req.body.shippingAddress
-                            .phone
-                            .trim(),
+            address:
+                req.body.shippingAddress
+                    .address
+                    .trim(),
 
-                    address:
-                        req.body.shippingAddress
-                            .address
-                            .trim(),
+            city:
+                req.body.shippingAddress
+                    .city
+                    .trim(),
 
-                    city:
-                        req.body.shippingAddress
-                            .city
-                            .trim(),
+            state:
+                req.body.shippingAddress
+                    .state
+                    .trim(),
 
-                    state:
-                        req.body.shippingAddress
-                            .state
-                            .trim(),
+            pincode:
+                req.body.shippingAddress
+                    .pincode
+                    .trim()
+        },
 
-                    pincode:
-                        req.body.shippingAddress
-                            .pincode
-                            .trim()
-                },
+        subtotal:
+            pricing.subtotal,
 
-                subtotal:
-                    pricing.subtotal,
+        discount:
+            pricing.discount,
 
-                discount:
-                    pricing.discount,
+        deliveryCharge:
+            pricing.deliveryCharge,
 
-                deliveryCharge:
-                    pricing.deliveryCharge,
+        totalAmount:
+            pricing.totalAmount,
 
-                totalAmount:
-                    pricing.totalAmount,
+        // PAYMENT STARTS AS PENDING
+        paymentStatus:
+            "pending",
 
-                paymentStatus:
-                    "pending",
+        // ORDER STARTS AS PENDING
+        orderStatus:
+            "pending",
 
-                orderStatus:
-                    "pending"
-            });
-
+        // NEW
+        shipment: {
+            status: "not_created"
+        }
+    });
 
         // -------------------------------------------------
         // 6. Create Razorpay order
@@ -576,6 +578,324 @@ const getOrderById = async (req, res) => {
 };
 
 
+// =====================================================
+// ADMIN - GET ALL ORDERS
+// =====================================================
+
+const getAllOrdersAdmin = async (req, res) => {
+
+    try {
+
+        const orders = await Order.find()
+            .populate(
+                "user",
+                "name phone email role"
+            )
+            .sort({
+                createdAt: -1
+            });
+
+
+        return res.status(200).json({
+
+            success: true,
+
+            count: orders.length,
+
+            orders
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "GET ALL ADMIN ORDERS ERROR:",
+            error
+        );
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                "Unable to fetch admin orders"
+
+        });
+    }
+};
+
+
+// =====================================================
+// ADMIN - GET SINGLE ORDER
+// =====================================================
+
+const getOrderByIdAdmin = async (req, res) => {
+
+    try {
+
+        const order =
+            await Order.findById(
+                req.params.id
+            )
+            .populate(
+                "user",
+                "name phone email role"
+            );
+
+
+        if (!order) {
+
+            return res.status(404).json({
+
+                success: false,
+
+                message:
+                    "Order not found"
+
+            });
+        }
+
+
+        return res.status(200).json({
+
+            success: true,
+
+            order
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "GET ADMIN ORDER ERROR:",
+            error
+        );
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                "Unable to fetch order"
+
+        });
+    }
+};
+
+
+// =====================================================
+// ADMIN - UPDATE ORDER STATUS
+// =====================================================
+
+const updateOrderStatusAdmin = async (req, res) => {
+
+    try {
+
+        const { id } =
+            req.params;
+
+        const { status } =
+            req.body;
+
+
+        const allowedStatuses = [
+            "pending",
+            "confirmed",
+            "processing",
+            "ready_to_ship",
+            "shipped",
+            "delivered",
+            "rto"
+        ];
+
+
+        // -------------------------------------------------
+        // VALIDATE STATUS
+        // -------------------------------------------------
+
+        if (!status) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Order status is required"
+
+            });
+        }
+
+
+        if (
+            !allowedStatuses.includes(status)
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Invalid order status"
+
+            });
+        }
+
+
+        // -------------------------------------------------
+        // FIND ORDER
+        // -------------------------------------------------
+
+        const order =
+            await Order.findById(id);
+
+
+        if (!order) {
+
+            return res.status(404).json({
+
+                success: false,
+
+                message:
+                    "Order not found"
+
+            });
+        }
+
+
+        // -------------------------------------------------
+        // PAYMENT SECURITY
+        // -------------------------------------------------
+        // Anything after confirmation requires
+        // successful payment.
+        // -------------------------------------------------
+
+        const paidRequiredStatuses = [
+            "confirmed",
+            "processing",
+            "ready_to_ship",
+            "shipped",
+            "delivered"
+        ];
+
+
+        if (
+            paidRequiredStatuses.includes(status) &&
+            order.paymentStatus !== "paid"
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Order cannot move forward because payment is not completed"
+
+            });
+        }
+
+
+        // -------------------------------------------------
+        // STATUS TRANSITIONS
+        // -------------------------------------------------
+
+        const transitions = {
+
+            pending: [
+                "confirmed"
+            ],
+
+            confirmed: [
+                "processing"
+            ],
+
+            processing: [
+                "ready_to_ship"
+            ],
+
+            ready_to_ship: [
+                "shipped"
+            ],
+
+            shipped: [
+                "delivered",
+                "rto"
+            ],
+
+            delivered: [],
+
+            rto: []
+        };
+
+
+        const currentStatus =
+            order.orderStatus;
+
+
+        // Same status is allowed
+
+        if (
+            currentStatus !== status
+        ) {
+
+            const allowedNextStatuses =
+                transitions[currentStatus] || [];
+
+
+            if (
+                !allowedNextStatuses.includes(status)
+            ) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        `Cannot change order status from "${currentStatus}" to "${status}"`
+
+                });
+            }
+        }
+
+
+        // -------------------------------------------------
+        // UPDATE
+        // -------------------------------------------------
+
+        order.orderStatus =
+            status;
+
+
+        await order.save();
+
+
+        return res.status(200).json({
+
+            success: true,
+
+            message:
+                "Order status updated successfully",
+
+            order
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "UPDATE ORDER STATUS ERROR:",
+            error
+        );
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                "Unable to update order status"
+
+        });
+    }
+};
 
 // =====================================================
 // EXPORT
@@ -587,5 +907,12 @@ module.exports = {
 
     getMyOrders,
 
-    getOrderById
+    getOrderById,
+
+    getAllOrdersAdmin,
+
+    getOrderByIdAdmin,
+
+    updateOrderStatusAdmin
+
 };

@@ -1,9 +1,9 @@
 const mongoose = require("mongoose");
 
 
-// ==========================================
-// ORDER ITEM
-// ==========================================
+// =====================================================
+// ORDER ITEM SCHEMA
+// =====================================================
 
 const orderItemSchema = new mongoose.Schema(
     {
@@ -14,25 +14,23 @@ const orderItemSchema = new mongoose.Schema(
 
         productType: {
             type: String,
-            enum: ["saree", "jewellery"],
-            required: true
+            required: true,
+            enum: ["saree", "jewellery"]
         },
 
         name: {
             type: String,
-            required: true,
-            trim: true
+            required: true
         },
 
         category: {
             type: String,
-            default: "",
-            trim: true
+            default: ""
         },
 
         image: {
             type: String,
-            required: true
+            default: ""
         },
 
         quantity: {
@@ -65,32 +63,139 @@ const orderItemSchema = new mongoose.Schema(
 );
 
 
-// ==========================================
-// ORDER
-// ==========================================
+// =====================================================
+// SHIPPING ADDRESS
+// =====================================================
+
+const shippingAddressSchema = new mongoose.Schema(
+    {
+        fullName: {
+            type: String,
+            required: true,
+            trim: true
+        },
+
+        phone: {
+            type: String,
+            required: true,
+            trim: true
+        },
+
+        address: {
+            type: String,
+            required: true,
+            trim: true
+        },
+
+        city: {
+            type: String,
+            required: true,
+            trim: true
+        },
+
+        state: {
+            type: String,
+            required: true,
+            trim: true
+        },
+
+        pincode: {
+            type: String,
+            required: true,
+            trim: true
+        }
+    },
+    {
+        _id: false
+    }
+);
+
+
+// =====================================================
+// SHIPMENT
+// =====================================================
+
+const shipmentSchema = new mongoose.Schema(
+    {
+        courier: {
+            type: String,
+            default: "",
+            trim: true
+        },
+
+        trackingNumber: {
+            type: String,
+            default: "",
+            trim: true
+        },
+
+        shipmentId: {
+            type: String,
+            default: "",
+            trim: true
+        },
+
+        status: {
+            type: String,
+
+            enum: [
+                "not_created",
+                "pickup_pending",
+                "picked_up",
+                "in_transit",
+                "out_for_delivery",
+                "delivered",
+                "delivery_failed",
+                "rto"
+            ],
+
+            default: "not_created"
+        },
+
+        shippedAt: {
+            type: Date,
+            default: null
+        },
+
+        deliveredAt: {
+            type: Date,
+            default: null
+        }
+    },
+    {
+        _id: false
+    }
+);
+
+
+// =====================================================
+// ORDER SCHEMA
+// =====================================================
 
 const orderSchema = new mongoose.Schema(
     {
+        // -------------------------------------------------
+        // USER
+        // -------------------------------------------------
+
         user: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: true,
-            index: true
+            required: true
         },
 
 
-        // ==================================
-        // PRODUCTS
-        // ==================================
+        // -------------------------------------------------
+        // ORDER ITEMS
+        // -------------------------------------------------
 
         items: {
             type: [orderItemSchema],
-
             required: true,
 
             validate: {
                 validator: function (items) {
-                    return items.length > 0;
+                    return items && items.length > 0;
                 },
 
                 message:
@@ -99,53 +204,19 @@ const orderSchema = new mongoose.Schema(
         },
 
 
-        // ==================================
+        // -------------------------------------------------
         // SHIPPING ADDRESS
-        // ==================================
+        // -------------------------------------------------
 
         shippingAddress: {
-
-            fullName: {
-                type: String,
-                required: true,
-                trim: true
-            },
-
-            phone: {
-                type: String,
-                required: true,
-                trim: true
-            },
-
-            address: {
-                type: String,
-                required: true,
-                trim: true
-            },
-
-            city: {
-                type: String,
-                required: true,
-                trim: true
-            },
-
-            state: {
-                type: String,
-                required: true,
-                trim: true
-            },
-
-            pincode: {
-                type: String,
-                required: true,
-                trim: true
-            }
+            type: shippingAddressSchema,
+            required: true
         },
 
 
-        // ==================================
+        // -------------------------------------------------
         // PRICE
-        // ==================================
+        // -------------------------------------------------
 
         subtotal: {
             type: Number,
@@ -155,14 +226,13 @@ const orderSchema = new mongoose.Schema(
 
         discount: {
             type: Number,
-            required: true,
+            default: 0,
             min: 0
         },
 
         deliveryCharge: {
             type: Number,
-            required: true,
-            default: 25,
+            default: 0,
             min: 0
         },
 
@@ -173,25 +243,24 @@ const orderSchema = new mongoose.Schema(
         },
 
 
-        // ==================================
+        // -------------------------------------------------
         // RAZORPAY
-        // ==================================
+        // -------------------------------------------------
 
         razorpayOrderId: {
             type: String,
-            default: null,
-            index: true
+            default: ""
         },
 
         razorpayPaymentId: {
             type: String,
-            default: null
+            default: ""
         },
 
 
-        // ==================================
+        // -------------------------------------------------
         // PAYMENT STATUS
-        // ==================================
+        // -------------------------------------------------
 
         paymentStatus: {
             type: String,
@@ -206,9 +275,9 @@ const orderSchema = new mongoose.Schema(
         },
 
 
-        // ==================================
+        // -------------------------------------------------
         // ORDER STATUS
-        // ==================================
+        // -------------------------------------------------
 
         orderStatus: {
             type: String,
@@ -217,12 +286,26 @@ const orderSchema = new mongoose.Schema(
                 "pending",
                 "confirmed",
                 "processing",
+                "ready_to_ship",
                 "shipped",
                 "delivered",
-                "cancelled"
+                "rto"
             ],
 
             default: "pending"
+        },
+
+
+        // -------------------------------------------------
+        // SHIPMENT
+        // -------------------------------------------------
+
+        shipment: {
+            type: shipmentSchema,
+
+            default: () => ({
+                status: "not_created"
+            })
         }
     },
 
@@ -232,7 +315,5 @@ const orderSchema = new mongoose.Schema(
 );
 
 
-module.exports = mongoose.model(
-    "Order",
-    orderSchema
-);
+module.exports =
+    mongoose.model("Order", orderSchema);

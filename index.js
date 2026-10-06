@@ -12,6 +12,7 @@ const authRoutes = require("./routes/authRoutes");
 const cartRoutes = require("./routes/cartRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
+const shipmentRoutes = require("./routes/shipmentRoutes");
 
 
 const app = express();
@@ -51,6 +52,7 @@ app.use("/api/orders",orderRoutes);
 
 app.use("/api/payments",paymentRoutes);
 
+app.use("/api/shipments", shipmentRoutes);
 
 
 // ==========================================
